@@ -445,37 +445,58 @@ export function buildBoosterEmbed(boosters) {
 
 // ─── EVENTS / TACTICAL ALERTS ────────────────────────
 
-export function buildEventEmbed(events) {
+const EVENT_COLORS = {
+  anniversary: 0xF1C40F,   // Gold for anniversary/dex
+  operation: 0xFF6B6B,     // Red for operations
+  default: 0x3498DB,       // Blue fallback
+};
+
+function getEventColor(tag) {
+  if (!tag) return EVENT_COLORS.default;
+  const t = tag.toLowerCase();
+  if (t.includes('anniversary') || t.includes('dex')) return EVENT_COLORS.anniversary;
+  if (t.includes('operation') || t.includes('event')) return EVENT_COLORS.operation;
+  return EVENT_COLORS.default;
+}
+
+export function buildEventEmbeds(events) {
   if (!events || events.length === 0) {
-    return new EmbedBuilder()
+    return [new EmbedBuilder()
       .setAuthor({ name: 'Events' })
       .setDescription('No active events.')
-      .setColor(0x2B2D31);
+      .setColor(0x2B2D31)];
   }
 
   const now = Date.now();
   const active = events.filter(e => e.expiry > now);
 
   if (active.length === 0) {
-    return new EmbedBuilder()
+    return [new EmbedBuilder()
       .setAuthor({ name: 'Events' })
       .setDescription('No active events.')
-      .setColor(0x2B2D31);
+      .setColor(0x2B2D31)];
   }
 
-  const lines = active.map(e => {
+  return active.map(e => {
     const name = getItemName(e.desc) || e.tag || 'Unknown Event';
     const node = e.node ? getNodeName(e.node) : '';
     const rewards = e.reward.map(r => getItemName(r)).join(', ');
-    let line = `**${name}**`;
-    if (node) line += `\n\u2003${node}`;
-    if (rewards) line += `\n\u2003Reward: ${rewards}`;
-    line += `\n\u2003Ends <t:${toUnix(e.expiry)}:R>`;
-    return line;
-  });
 
-  return new EmbedBuilder()
-    .setAuthor({ name: `Events \u2500 ${active.length} Active` })
-    .setDescription(lines.join('\n\n'))
-    .setColor(0xFF6B6B);
+    let desc = '';
+    if (node) desc += `**Location** \u2022 ${node}\n`;
+    if (rewards) desc += `**Reward** \u2022 ${rewards}\n`;
+    if (e.healthPct !== undefined) {
+      const pct = Math.round(e.healthPct * 100);
+      const barLen = 10;
+      const filled = Math.round((pct / 100) * barLen);
+      desc += `**Progress** \u2022 ${'█'.repeat(filled)}${'░'.repeat(barLen - filled)} ${pct}%\n`;
+    }
+    if (e.community) desc += '**Type** \u2022 Community event\n';
+    desc += `**Ends** \u2022 <t:${toUnix(e.expiry)}:R> \u2022 <t:${toUnix(e.expiry)}:f>`;
+
+    return new EmbedBuilder()
+      .setAuthor({ name: name })
+      .setDescription(desc)
+      .setColor(getEventColor(e.tag));
+  });
 }

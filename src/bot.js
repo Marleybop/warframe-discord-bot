@@ -11,7 +11,7 @@ import {
   buildArchonEmbed, buildInvasionEmbed, buildVoidStormEmbed,
   buildCycleEmbed, buildDarvoEmbed, buildNightwaveEmbed,
   buildCircuitEmbed, buildAlertEmbed, buildBoosterEmbed,
-  buildEventEmbed,
+  buildEventEmbeds,
 } from './embeds.js';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -127,7 +127,7 @@ async function updateTrackers() {
     updateChannel('circuit',   buildCircuitEmbed(extractCircuit(ws))),
     updateChannel('alerts',    buildAlertEmbed(extractAlerts(ws))),
     updateChannel('boosters',  buildBoosterEmbed(extractGlobalBoosters(ws))),
-    updateChannel('events',    buildEventEmbed(extractEvents(ws))),
+    updateChannel('events',    buildEventEmbeds(extractEvents(ws))),
   ]);
 
   const active = Object.entries(CHANNELS).filter(([, v]) => v).map(([k]) => k);

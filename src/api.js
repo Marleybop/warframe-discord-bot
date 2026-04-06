@@ -192,11 +192,17 @@ export function extractEvents(ws) {
   return (ws.Goals || []).map(g => ({
     tag: g.Tag,
     desc: g.Desc,
+    tooltip: g.ToolTip,
     node: g.Node,
     activation: parseDate(g.Activation),
     expiry: parseDate(g.Expiry),
     reward: g.Reward?.items || [],
     icon: g.Icon,
     personal: g.Personal || false,
+    community: g.Community || false,
+    healthPct: g.HealthPct,
+    scoreTag: g.ScoreLocTag,
+    faction: g.Faction,
+    missionKey: g.MissionKeyName,
   }));
 }
