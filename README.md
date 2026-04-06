@@ -19,22 +19,57 @@ Discord bot that posts live-updating Warframe world state data into your server 
 
 ## Prerequisites
 
-You need **Node.js 18 or higher** installed. Check with `node -v` — if it's missing or below v18, install it:
+You need two things installed before starting:
 
-| OS | Install |
-|---|---|
-| **Windows** | Download the installer from [nodejs.org](https://nodejs.org/) (LTS recommended) |
-| **macOS** | `brew install node` or download from [nodejs.org](https://nodejs.org/) |
-| **Ubuntu/Debian** | `curl -fsSL https://deb.nodesource.com/setup_22.x \| sudo bash - && sudo apt install -y nodejs` |
-| **Fedora/RHEL** | `curl -fsSL https://rpm.nodesource.com/setup_22.x \| sudo bash - && sudo dnf install -y nodejs` |
-| **Arch** | `sudo pacman -S nodejs npm` |
-| **Any (via nvm)** | `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash && nvm install 22` |
+**1. Node.js 18 or higher**
 
-You also need a Discord bot. If you don't have one yet, see [Creating a Discord Bot](#creating-a-discord-bot) below.
+Check if you have it: open a terminal and run `node -v`. If it prints `v18.0.0` or higher, you're good. If not, install it:
+
+- **Windows**: Go to [nodejs.org](https://nodejs.org/), download the **LTS** installer, and run it. Accept all defaults.
+- **macOS**: Go to [nodejs.org](https://nodejs.org/) and download the **LTS** installer, or run `brew install node` if you use Homebrew.
+- **Ubuntu/Debian**: Run these two commands:
+  ```bash
+  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
+  sudo apt install -y nodejs
+  ```
+- **Arch**: Run `sudo pacman -S nodejs npm`
+
+After installing, verify with `node -v` and `npm -v` — both should print a version number.
+
+**2. Git**
+
+Check if you have it: run `git --version`. If not:
+
+- **Windows**: Download from [git-scm.com](https://git-scm.com/download/win) and install with defaults.
+- **macOS**: Run `xcode-select --install` or download from [git-scm.com](https://git-scm.com/download/mac).
+- **Linux**: Run `sudo apt install git` (Ubuntu/Debian) or `sudo pacman -S git` (Arch).
+
+## Creating a Discord Bot
+
+You need to do this **before** setup, because the bot won't start without a token.
+
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications) and log in
+2. Click the **New Application** button in the top right. Give it a name (e.g. "Warframe Tracker")
+3. In the left sidebar, click **Bot**
+4. Click **Reset Token**, then **Yes, do it!**
+5. Click **Copy** — save this token somewhere safe (you'll need it in a moment). You can only see it once.
+6. In the left sidebar, click **OAuth2**, then **URL Generator**
+7. Under **Scopes**, tick `bot`
+8. Under **Bot Permissions** (appears after ticking bot), tick these four:
+   - `Send Messages`
+   - `Embed Links`
+   - `Read Message History`
+   - `View Channels`
+9. Scroll down and copy the **Generated URL**
+10. Open that URL in your browser, pick your Discord server from the dropdown, and click **Authorize**
+
+The bot should now appear in your server (offline until you start it).
 
 ## Setup
 
-### 1. Clone and install
+### Step 1 — Clone and install
+
+Open a terminal and run:
 
 ```bash
 git clone https://github.com/Marleybop/warframe-discord-bot.git
@@ -42,21 +77,27 @@ cd warframe-discord-bot
 npm run setup
 ```
 
-This will install dependencies, download game data, and create a `.env` file.
+You should see it install `discord.js` and download game data files. If you get an error like `npm: command not found`, go back to Prerequisites and install Node.js.
 
-### 2. Configure `.env`
+### Step 2 — Configure the bot
 
-Open `.env` in any text editor and fill in your bot token and channel IDs:
+Open the `.env` file in any text editor (Notepad, nano, VS Code — whatever you have).
+
+Paste your bot token after `DISCORD_TOKEN=`:
 
 ```env
-# Your bot token (see "Creating a Discord Bot" below)
-DISCORD_TOKEN=your_bot_token_here
+DISCORD_TOKEN=paste_your_token_here
+```
 
-# How often to refresh data (in seconds)
+Then add channel IDs for the trackers you want. To get a channel ID:
+1. In Discord, go to **Settings > Advanced** and turn on **Developer Mode**
+2. Right-click the channel you want to use > **Copy Channel ID**
+3. Paste it after the `=` sign
+
+```env
+DISCORD_TOKEN=paste_your_token_here
 REFRESH_INTERVAL_SECONDS=60
 
-# Add channel IDs for the trackers you want active.
-# Leave blank to disable a tracker.
 FISSURE_CHANNEL_ID=
 BARO_CHANNEL_ID=
 SORTIE_CHANNEL_ID=
@@ -69,33 +110,40 @@ NIGHTWAVE_CHANNEL_ID=
 CIRCUIT_CHANNEL_ID=
 ```
 
-To get a channel ID: Discord Settings > Advanced > enable **Developer Mode**, then right-click any channel > **Copy Channel ID**.
+Leave any line blank to disable that tracker. You can use the same channel ID for multiple trackers if you want them all in one place.
 
-You can put multiple trackers in the same channel or give each their own — your choice.
-
-### 3. Start the bot
+### Step 3 — Start the bot
 
 ```bash
 npm start
 ```
 
-You should see the bot log in and start posting embeds in your channels.
+You should see output like:
 
-## Creating a Discord Bot
+```
+Logged in as YourBot#1234
+Active trackers: fissures, baro, sortie
+Refresh: 60s
+```
 
-1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
-2. Click **New Application** and give it a name
-3. Go to the **Bot** tab > click **Reset Token** > copy and save it somewhere safe
-4. Go to **OAuth2 > URL Generator**:
-   - Scopes: `bot`
-   - Bot Permissions: `Send Messages`, `Embed Links`, `Read Message History`, `View Channels`
-5. Copy the generated URL, open it in your browser, select your server, and authorize
+The bot will post embeds in your channels and update them every 60 seconds.
 
-Paste the token into `DISCORD_TOKEN` in your `.env` file. Never share your token publicly.
+To stop the bot, press `Ctrl+C`.
+
+## Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `npm: command not found` | Node.js isn't installed. See Prerequisites. |
+| `git: command not found` | Git isn't installed. See Prerequisites. |
+| `Set DISCORD_TOKEN in .env` | You didn't paste your bot token into the `.env` file. |
+| `Missing Access` in the console | The bot can't see or send messages in that channel. Go to Server Settings > Roles > find the bot's role > enable View Channels, Send Messages, Embed Links, Read Message History. If the channel is private, you also need to add the bot's role in the channel permissions. |
+| Bot is online but no embeds appear | Make sure you put the correct channel ID in `.env` and restarted the bot. |
+| Embeds show codes like `SolNode51` | Run `npm run update-data` to refresh the game data files. |
 
 ## Updating Game Data
 
-The `data/` folder contains node names, item names, and sortie data from the [WFCD](https://github.com/WFCD) community. If names look wrong after a Warframe update, refresh them:
+The `data/` folder contains node names, item names, and sortie data from the [WFCD](https://github.com/WFCD) community. If names look wrong after a Warframe update:
 
 ```bash
 npm run update-data
@@ -132,17 +180,20 @@ By default the bot runs in your terminal and stops when you close it. To keep it
 
 ### Windows — Task Scheduler
 
-1. Open **Task Scheduler** (search for it in Start)
-2. Click **Create Basic Task**
-3. Name: `Warframe Tracker`
-4. Trigger: **When the computer starts**
-5. Action: **Start a program**
-   - Program: `node`
-   - Arguments: `src/bot.js`
-   - Start in: `C:\path\to\warframe-discord-bot`
-6. Finish, then right-click the task > **Properties**:
-   - Check **Run whether user is logged on or not**
-   - Check **Restart the task if it fails** (set to every 1 minute)
+1. Open **Task Scheduler** (search for it in the Start menu)
+2. Click **Create Basic Task** on the right side
+3. Name: `Warframe Tracker`, click Next
+4. Trigger: select **When the computer starts**, click Next
+5. Action: select **Start a program**, click Next
+6. Fill in:
+   - **Program/script**: the full path to node, e.g. `C:\Program Files\nodejs\node.exe` (run `where node` in a terminal to find it)
+   - **Add arguments**: `src\bot.js`
+   - **Start in**: the full path to the project folder, e.g. `C:\Users\YourName\warframe-discord-bot`
+7. Click Finish
+8. Find the task in the list, right-click it > **Properties**
+9. Check **Run whether user is logged on or not**
+10. On the **Settings** tab, check **If the task fails, restart every** and set it to `1 minute`
+11. Click OK
 
 ### Linux — systemd
 
@@ -152,7 +203,7 @@ Create the service file:
 sudo nano /etc/systemd/system/warframe-tracker.service
 ```
 
-Replace `youruser` with your actual Linux username (run `whoami` to check). If you're running as root, use `root` and `/root/warframe-discord-bot`:
+Paste the following. **Replace `youruser` with your actual username** — run `whoami` to check. If you're running as `root`, change `User=root` and `WorkingDirectory=/root/warframe-discord-bot`:
 
 ```ini
 [Unit]
@@ -172,25 +223,31 @@ Environment=NODE_ENV=production
 WantedBy=multi-user.target
 ```
 
-> **Common error:** If you see `status=217/USER`, it means the `User=` value doesn't match a real user on the system. Fix it and run `sudo systemctl daemon-reload` before restarting.
-
-Enable and start:
+Save the file (`Ctrl+O`, Enter, `Ctrl+X` in nano), then run:
 
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable warframe-tracker
 sudo systemctl start warframe-tracker
+```
 
-# Check status
+Check it's running:
+
+```bash
 sudo systemctl status warframe-tracker
+```
 
-# View logs
+If you see `active (running)`, it's working. To view live logs:
+
+```bash
 journalctl -u warframe-tracker -f
 ```
 
+> **If you see `status=217/USER`**: the `User=` value in the service file doesn't match a real user on your system. Fix it, save, run `sudo systemctl daemon-reload`, then `sudo systemctl restart warframe-tracker`.
+
 ### macOS — launchd
 
-Create `~/Library/LaunchAgents/com.warframe.tracker.plist`:
+Create the file `~/Library/LaunchAgents/com.warframe.tracker.plist`. **Replace `youruser` with your macOS username** (run `whoami` to check):
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -223,6 +280,8 @@ Load it:
 ```bash
 launchctl load ~/Library/LaunchAgents/com.warframe.tracker.plist
 ```
+
+To check logs: `cat /tmp/warframe-tracker.log`
 
 ## Requirements
 
