@@ -168,6 +168,9 @@ export function extractCircuit(ws) {
   }));
 }
 
+// Legacy: DE replaced alerts with Nightwave in 2019. This array is almost
+// always empty. Gift of the Lotus and tactical alerts now appear in Goals
+// (extracted by extractEvents). Kept here in case DE ever uses it again.
 export function extractAlerts(ws) {
   return (ws.Alerts || []).map(a => ({
     mission: a.MissionInfo,
