@@ -228,8 +228,8 @@ If you don't want to keep your own machine running 24/7:
 
 ## Requirements
 
-- Node.js 18+ (uses native `fetch`, no HTTP library needed)
-- One dependency: `discord.js`
+- **Runtime:** Node.js 18+ (uses native `fetch`, no HTTP library needed)
+- **npm dependency:** `discord.js` (the only package installed)
 
 ## License
 
