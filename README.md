@@ -30,7 +30,11 @@ You need **Node.js 18 or higher** installed. Check with `node -v` — if it's mi
 | **Arch** | `sudo pacman -S nodejs npm` |
 | **Any (via nvm)** | `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash && nvm install 22` |
 
-## Quick Start
+You also need a Discord bot. If you don't have one yet, see [Creating a Discord Bot](#creating-a-discord-bot) below.
+
+## Setup
+
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/Marleybop/warframe-discord-bot.git
@@ -38,59 +42,60 @@ cd warframe-discord-bot
 npm run setup
 ```
 
-The setup script will:
-1. Create a `.env` file from the template
-2. Install dependencies (just `discord.js`)
-3. Download the latest game data files
+This will install dependencies, download game data, and create a `.env` file.
 
-Then edit `.env` with your bot token and channel IDs, and run:
+### 2. Configure `.env`
 
-```bash
-npm start
-```
+Open `.env` in any text editor and fill in your bot token and channel IDs:
 
-## Manual Setup
-
-```bash
-git clone https://github.com/Marleybop/warframe-discord-bot.git
-cd warframe-tracker
-npm install
-cp .env.example .env
-```
-
-Edit `.env`:
 ```env
+# Your bot token (see "Creating a Discord Bot" below)
 DISCORD_TOKEN=your_bot_token_here
-FISSURE_CHANNEL_ID=123456789012345678
-BARO_CHANNEL_ID=123456789012345678
+
+# How often to refresh data (in seconds)
+REFRESH_INTERVAL_SECONDS=60
+
+# Add channel IDs for the trackers you want active.
+# Leave blank to disable a tracker.
+FISSURE_CHANNEL_ID=
+BARO_CHANNEL_ID=
+SORTIE_CHANNEL_ID=
+ARCHON_CHANNEL_ID=
+INVASIONS_CHANNEL_ID=
+STORMS_CHANNEL_ID=
+CYCLES_CHANNEL_ID=
+DARVO_CHANNEL_ID=
+NIGHTWAVE_CHANNEL_ID=
+CIRCUIT_CHANNEL_ID=
 ```
 
-Run:
+To get a channel ID: Discord Settings > Advanced > enable **Developer Mode**, then right-click any channel > **Copy Channel ID**.
+
+You can put multiple trackers in the same channel or give each their own — your choice.
+
+### 3. Start the bot
+
 ```bash
 npm start
 ```
+
+You should see the bot log in and start posting embeds in your channels.
 
 ## Creating a Discord Bot
 
 1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
-2. **New Application** > name it
-3. **Bot** tab > **Reset Token** > copy and save it
-4. **OAuth2 > URL Generator**:
+2. Click **New Application** and give it a name
+3. Go to the **Bot** tab > click **Reset Token** > copy and save it somewhere safe
+4. Go to **OAuth2 > URL Generator**:
    - Scopes: `bot`
    - Bot Permissions: `Send Messages`, `Embed Links`, `Read Message History`, `View Channels`
-5. Open the generated URL > select your server > authorize
+5. Copy the generated URL, open it in your browser, select your server, and authorize
 
-## Getting Channel IDs
-
-1. Discord Settings > Advanced > enable **Developer Mode**
-2. Right-click any channel > **Copy Channel ID**
-3. Paste into `.env` next to the matching tracker
-
-Leave any channel ID blank to disable that tracker.
+Paste the token into `DISCORD_TOKEN` in your `.env` file. Never share your token publicly.
 
 ## Updating Game Data
 
-The `data/` folder contains node names, item names, and sortie data from the [WFCD](https://github.com/WFCD) community. To update after a Warframe patch:
+The `data/` folder contains node names, item names, and sortie data from the [WFCD](https://github.com/WFCD) community. If names look wrong after a Warframe update, refresh them:
 
 ```bash
 npm run update-data
@@ -98,32 +103,32 @@ npm run update-data
 
 ## How It Works
 
-- Fetches world state from DE's official endpoint (`content.warframe.com/dynamic/worldState.php`)
+- Fetches world state directly from DE's official endpoint every 60 seconds
 - Parses the raw data into clean structures
-- Builds Discord embeds for each tracker
-- Posts one message per tracker, then edits it every 60 seconds
+- Builds Discord embeds for each active tracker
+- Posts one message per tracker, then edits it each cycle — no message spam
 - Zero external API dependencies — talks directly to DE's servers
 
 ## Project Structure
 
 ```
-warframe-tracker/
+warframe-discord-bot/
   .env.example       # Template for configuration
-  package.json        # Dependencies and scripts
-  data/               # WFCD game data (node names, items, sortie info)
+  package.json       # Dependencies and scripts
+  data/              # WFCD game data (node names, items, sortie info)
   scripts/
-    setup.js          # One-command setup
-    update-data.js    # Refresh game data files
+    setup.js         # One-command setup
+    update-data.js   # Refresh game data files
   src/
-    bot.js            # Discord client, update loop, message tracking
-    api.js            # Fetch and parse DE worldstate
-    embeds.js         # Build Discord embeds for each tracker
-    warframe-data.js  # Name lookups (nodes, items, bosses, modifiers)
+    bot.js           # Discord client, update loop, message tracking
+    api.js           # Fetch and parse DE worldstate
+    embeds.js        # Build Discord embeds for each tracker
+    warframe-data.js # Name lookups (nodes, items, bosses, modifiers)
 ```
 
 ## Running as a Service
 
-By default the bot runs in your terminal and stops when you close it. To keep it running 24/7, set it up as a service.
+By default the bot runs in your terminal and stops when you close it. To keep it running 24/7, set it up as a background service.
 
 ### Windows — Task Scheduler
 
