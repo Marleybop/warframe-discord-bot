@@ -121,6 +121,111 @@ warframe-tracker/
     warframe-data.js  # Name lookups (nodes, items, bosses, modifiers)
 ```
 
+## Running as a Service
+
+By default the bot runs in your terminal and stops when you close it. To keep it running 24/7, set it up as a service.
+
+### Windows — Task Scheduler
+
+1. Open **Task Scheduler** (search for it in Start)
+2. Click **Create Basic Task**
+3. Name: `Warframe Tracker`
+4. Trigger: **When the computer starts**
+5. Action: **Start a program**
+   - Program: `node`
+   - Arguments: `src/bot.js`
+   - Start in: `C:\path\to\warframe-discord-bot`
+6. Finish, then right-click the task > **Properties**:
+   - Check **Run whether user is logged on or not**
+   - Check **Restart the task if it fails** (set to every 1 minute)
+
+### Linux — systemd
+
+Create the service file:
+
+```bash
+sudo nano /etc/systemd/system/warframe-tracker.service
+```
+
+```ini
+[Unit]
+Description=Warframe Discord Tracker
+After=network.target
+
+[Service]
+Type=simple
+User=youruser
+WorkingDirectory=/home/youruser/warframe-discord-bot
+ExecStart=/usr/bin/node src/bot.js
+Restart=always
+RestartSec=10
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable warframe-tracker
+sudo systemctl start warframe-tracker
+
+# Check status
+sudo systemctl status warframe-tracker
+
+# View logs
+journalctl -u warframe-tracker -f
+```
+
+### macOS — launchd
+
+Create `~/Library/LaunchAgents/com.warframe.tracker.plist`:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.warframe.tracker</string>
+    <key>ProgramArguments</key>
+    <array>
+        <string>/usr/local/bin/node</string>
+        <string>src/bot.js</string>
+    </array>
+    <key>WorkingDirectory</key>
+    <string>/Users/youruser/warframe-discord-bot</string>
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+    <key>StandardOutPath</key>
+    <string>/tmp/warframe-tracker.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/warframe-tracker.err</string>
+</dict>
+</plist>
+```
+
+Load it:
+
+```bash
+launchctl load ~/Library/LaunchAgents/com.warframe.tracker.plist
+```
+
+### Hosting Options
+
+If you don't want to keep your own machine running 24/7:
+
+| Option | Cost | Notes |
+|---|---|---|
+| **Oracle Cloud** | Free forever | ARM instance, always-free tier |
+| **Raspberry Pi** | ~$35 one-time | Runs on your home network |
+| **Hetzner VPS** | ~$4/mo | Cheap, reliable EU/US servers |
+| **Railway** | Free tier available | Deploy from GitHub, auto-restarts |
+
 ## Requirements
 
 - Node.js 18+ (uses native `fetch`, no HTTP library needed)
