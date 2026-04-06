@@ -17,13 +17,24 @@ Discord bot that posts live-updating Warframe world state data into your server 
 | **Nightwave** | Active daily/weekly/elite challenges with full descriptions |
 | **The Circuit** | This week's Warframe and weapon choices |
 
+## Prerequisites
+
+You need **Node.js 18 or higher** installed. Check with `node -v` — if it's missing or below v18, install it:
+
+| OS | Install |
+|---|---|
+| **Windows** | Download the installer from [nodejs.org](https://nodejs.org/) (LTS recommended) |
+| **macOS** | `brew install node` or download from [nodejs.org](https://nodejs.org/) |
+| **Ubuntu/Debian** | `curl -fsSL https://deb.nodesource.com/setup_22.x \| sudo bash - && sudo apt install -y nodejs` |
+| **Fedora/RHEL** | `curl -fsSL https://rpm.nodesource.com/setup_22.x \| sudo bash - && sudo dnf install -y nodejs` |
+| **Arch** | `sudo pacman -S nodejs npm` |
+| **Any (via nvm)** | `curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh \| bash && nvm install 22` |
+
 ## Quick Start
 
-Requires [Node.js 18+](https://nodejs.org/).
-
 ```bash
-git clone https://github.com/YOUR_USERNAME/warframe-tracker.git
-cd warframe-tracker
+git clone https://github.com/Marleybop/warframe-discord-bot.git
+cd warframe-discord-bot
 npm run setup
 ```
 
@@ -41,7 +52,7 @@ npm start
 ## Manual Setup
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/warframe-tracker.git
+git clone https://github.com/Marleybop/warframe-discord-bot.git
 cd warframe-tracker
 npm install
 cp .env.example .env
