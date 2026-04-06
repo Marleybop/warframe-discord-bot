@@ -224,17 +224,6 @@ Load it:
 launchctl load ~/Library/LaunchAgents/com.warframe.tracker.plist
 ```
 
-### Hosting Options
-
-If you don't want to keep your own machine running 24/7:
-
-| Option | Cost | Notes |
-|---|---|---|
-| **Oracle Cloud** | Free forever | ARM instance, always-free tier |
-| **Raspberry Pi** | ~$35 one-time | Runs on your home network |
-| **Hetzner VPS** | ~$4/mo | Cheap, reliable EU/US servers |
-| **Railway** | Free tier available | Deploy from GitHub, auto-restarts |
-
 ## Requirements
 
 - **Runtime:** Node.js 18+ (uses native `fetch`, no HTTP library needed)
