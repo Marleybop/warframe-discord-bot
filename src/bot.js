@@ -4,12 +4,14 @@ import {
   extractSortie, extractArchonHunt, extractInvasions,
   extractVoidStorms, extractNightwave, extractDailyDeal,
   extractCycles, extractCircuit,
+  extractAlerts, extractGlobalBoosters, extractEvents,
 } from './api.js';
 import {
   buildFissureEmbeds, buildBaroEmbed, buildSortieEmbed,
   buildArchonEmbed, buildInvasionEmbed, buildVoidStormEmbed,
   buildCycleEmbed, buildDarvoEmbed, buildNightwaveEmbed,
-  buildCircuitEmbed,
+  buildCircuitEmbed, buildAlertEmbed, buildBoosterEmbed,
+  buildEventEmbed,
 } from './embeds.js';
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';
@@ -53,6 +55,9 @@ const CHANNELS = {
   darvo:     process.env.DARVO_CHANNEL_ID,
   nightwave: process.env.NIGHTWAVE_CHANNEL_ID,
   circuit:   process.env.CIRCUIT_CHANNEL_ID,
+  alerts:    process.env.ALERTS_CHANNEL_ID,
+  boosters:  process.env.BOOSTERS_CHANNEL_ID,
+  events:    process.env.EVENTS_CHANNEL_ID,
 };
 
 const client = new Client({
@@ -120,6 +125,9 @@ async function updateTrackers() {
     updateChannel('darvo',     buildDarvoEmbed(extractDailyDeal(ws))),
     updateChannel('nightwave', buildNightwaveEmbed(extractNightwave(ws))),
     updateChannel('circuit',   buildCircuitEmbed(extractCircuit(ws))),
+    updateChannel('alerts',    buildAlertEmbed(extractAlerts(ws))),
+    updateChannel('boosters',  buildBoosterEmbed(extractGlobalBoosters(ws))),
+    updateChannel('events',    buildEventEmbed(extractEvents(ws))),
   ]);
 
   const active = Object.entries(CHANNELS).filter(([, v]) => v).map(([k]) => k);

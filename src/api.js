@@ -167,3 +167,36 @@ export function extractCircuit(ws) {
     choices: c.Choices || [],
   }));
 }
+
+export function extractAlerts(ws) {
+  return (ws.Alerts || []).map(a => ({
+    mission: a.MissionInfo,
+    activation: parseDate(a.Activation),
+    expiry: parseDate(a.Expiry),
+  }));
+}
+
+export function extractGlobalBoosters(ws) {
+  return (ws.GlobalUpgrades || []).map(g => ({
+    type: g.UpgradeType,
+    operation: g.OperationType,
+    value: g.Value,
+    tag: g.LocalizeTag,
+    descTag: g.LocalizeDescTag,
+    activation: parseDate(g.Activation),
+    expiry: parseDate(g.ExpiryDate),
+  }));
+}
+
+export function extractEvents(ws) {
+  return (ws.Goals || []).map(g => ({
+    tag: g.Tag,
+    desc: g.Desc,
+    node: g.Node,
+    activation: parseDate(g.Activation),
+    expiry: parseDate(g.Expiry),
+    reward: g.Reward?.items || [],
+    icon: g.Icon,
+    personal: g.Personal || false,
+  }));
+}

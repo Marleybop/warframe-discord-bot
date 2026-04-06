@@ -366,3 +366,116 @@ export function buildCircuitEmbed(circuit) {
     .setDescription(lines.join('\n'))
     .setColor(0xF39C12);
 }
+
+// ─── ALERTS ──────────────────────────────────────────
+
+export function buildAlertEmbed(alerts) {
+  if (!alerts || alerts.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Alerts' })
+      .setDescription('No active alerts.')
+      .setColor(0x2B2D31);
+  }
+
+  const now = Date.now();
+  const active = alerts.filter(a => a.expiry > now);
+
+  if (active.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Alerts' })
+      .setDescription('No active alerts.')
+      .setColor(0x2B2D31);
+  }
+
+  const lines = active.map(a => {
+    const mission = a.mission;
+    const type = getMissionType(mission?.missionType || '');
+    const node = getNodeName(mission?.location || '');
+    const reward = mission?.missionReward;
+    let rewardText = '';
+    if (reward?.items?.length) rewardText = reward.items.map(i => getItemName(i)).join(', ');
+    if (reward?.credits) rewardText += (rewardText ? ' + ' : '') + `${reward.credits}cr`;
+    return `**${type}** \u2022 ${node}\n\u2003${rewardText || 'No reward listed'} \u2022 ends <t:${toUnix(a.expiry)}:R>`;
+  });
+
+  return new EmbedBuilder()
+    .setAuthor({ name: `Alerts \u2500 ${active.length} Active` })
+    .setDescription(lines.join('\n\n'))
+    .setColor(0xF1C40F);
+}
+
+// ─── GLOBAL BOOSTERS ─────────────────────────────────
+
+const BOOSTER_NAMES = {
+  GAMEPLAY_MONEY_REWARD_AMOUNT: 'Credits',
+  GAMEPLAY_PICKUP_AMOUNT: 'Resources',
+  GAMEPLAY_AFFINITY_AMOUNT: 'Affinity',
+  GAMEPLAY_MOD_REWARD_AMOUNT: 'Mod Drop Rate',
+};
+
+export function buildBoosterEmbed(boosters) {
+  if (!boosters || boosters.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Global Boosters' })
+      .setDescription('No active boosters.')
+      .setColor(0x2B2D31);
+  }
+
+  const now = Date.now();
+  const active = boosters.filter(b => b.expiry > now);
+
+  if (active.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Global Boosters' })
+      .setDescription('No active boosters.')
+      .setColor(0x2B2D31);
+  }
+
+  const lines = active.map(b => {
+    const name = BOOSTER_NAMES[b.type] || b.type;
+    const mult = b.operation === 'MULTIPLY' ? `${b.value}x` : `+${b.value}`;
+    return `**${mult} ${name}**\nExpires <t:${toUnix(b.expiry)}:R>`;
+  });
+
+  return new EmbedBuilder()
+    .setAuthor({ name: `Global Boosters \u2500 ${active.length} Active` })
+    .setDescription(lines.join('\n\n'))
+    .setColor(0x00FF88);
+}
+
+// ─── EVENTS / TACTICAL ALERTS ────────────────────────
+
+export function buildEventEmbed(events) {
+  if (!events || events.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Events' })
+      .setDescription('No active events.')
+      .setColor(0x2B2D31);
+  }
+
+  const now = Date.now();
+  const active = events.filter(e => e.expiry > now);
+
+  if (active.length === 0) {
+    return new EmbedBuilder()
+      .setAuthor({ name: 'Events' })
+      .setDescription('No active events.')
+      .setColor(0x2B2D31);
+  }
+
+  const lines = active.map(e => {
+    const name = getItemName(e.desc) || e.tag || 'Unknown Event';
+    const node = e.node ? getNodeName(e.node) : '';
+    const rewards = e.reward.map(r => getItemName(r)).join(', ');
+    let line = `**${name}**`;
+    if (node) line += `\n\u2003${node}`;
+    if (rewards) line += `\n\u2003Reward: ${rewards}`;
+    line += `\n\u2003Ends <t:${toUnix(e.expiry)}:R>`;
+    return line;
+  });
+
+  return new EmbedBuilder()
+    .setAuthor({ name: `Events \u2500 ${active.length} Active` })
+    .setDescription(lines.join('\n\n'))
+    .setColor(0xFF6B6B);
+}
