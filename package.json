@@ -1,0 +1,29 @@
+{
+  "name": "warframe-tracker",
+  "version": "1.0.0",
+  "description": "Discord bot that tracks Warframe world state — fissures, Baro Ki'Teer, sorties, invasions, nightwave, and more. Live-updating embeds powered by DE's official API.",
+  "main": "src/bot.js",
+  "type": "module",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node src/bot.js",
+    "dev": "node --watch src/bot.js",
+    "setup": "node scripts/setup.js",
+    "update-data": "node scripts/update-data.js"
+  },
+  "keywords": [
+    "warframe",
+    "discord",
+    "bot",
+    "tracker",
+    "fissures",
+    "baro",
+    "nightwave"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.16.0"
+  }
+}
