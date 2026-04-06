@@ -203,7 +203,11 @@ Create the service file:
 sudo nano /etc/systemd/system/warframe-tracker.service
 ```
 
-Paste the following. **Replace `youruser` with your actual username** — run `whoami` to check. If you're running as `root`, change `User=root` and `WorkingDirectory=/root/warframe-discord-bot`:
+Paste the following. **You must replace the `User` and `WorkingDirectory` values:**
+
+- Run `whoami` to get your username
+- Run `pwd` inside the project folder to get the full path
+- **Important:** if you're running as `root`, the home folder is `/root/`, NOT `/home/root/`
 
 ```ini
 [Unit]
