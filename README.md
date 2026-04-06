@@ -197,57 +197,33 @@ By default the bot runs in your terminal and stops when you close it. To keep it
 
 ### Linux — systemd
 
-Create the service file:
+Copy and paste this entire block into your terminal:
 
 ```bash
-sudo nano /etc/systemd/system/warframe-tracker.service
-```
-
-Paste the following. **You must replace the `User` and `WorkingDirectory` values:**
-
-- Run `whoami` to get your username
-- Run `pwd` inside the project folder to get the full path
-- **Important:** if you're running as `root`, the home folder is `/root/`, NOT `/home/root/`
-
-```ini
+cat <<'EOF' | sudo tee /etc/systemd/system/warframe-tracker.service
 [Unit]
 Description=Warframe Discord Tracker
 After=network.target
 
 [Service]
 Type=simple
-User=youruser
-WorkingDirectory=/home/youruser/warframe-discord-bot
+User=root
+WorkingDirectory=/root/warframe-discord-bot
 ExecStart=/usr/bin/node src/bot.js
 Restart=always
 RestartSec=10
-Environment=NODE_ENV=production
 
 [Install]
 WantedBy=multi-user.target
-```
+EOF
 
-Save the file (`Ctrl+O`, Enter, `Ctrl+X` in nano), then run:
-
-```bash
 sudo systemctl daemon-reload
 sudo systemctl enable warframe-tracker
 sudo systemctl start warframe-tracker
-```
-
-Check it's running:
-
-```bash
 sudo systemctl status warframe-tracker
 ```
 
-If you see `active (running)`, it's working. To view live logs:
-
-```bash
-journalctl -u warframe-tracker -f
-```
-
-> **If you see `status=217/USER`**: the `User=` value in the service file doesn't match a real user on your system. Fix it, save, run `sudo systemctl daemon-reload`, then `sudo systemctl restart warframe-tracker`.
+If you cloned the project somewhere other than `/root/warframe-discord-bot`, change the `WorkingDirectory` path to match.
 
 ### macOS — launchd
 
