@@ -152,6 +152,8 @@ Create the service file:
 sudo nano /etc/systemd/system/warframe-tracker.service
 ```
 
+Replace `youruser` with your actual Linux username (run `whoami` to check). If you're running as root, use `root` and `/root/warframe-discord-bot`:
+
 ```ini
 [Unit]
 Description=Warframe Discord Tracker
@@ -169,6 +171,8 @@ Environment=NODE_ENV=production
 [Install]
 WantedBy=multi-user.target
 ```
+
+> **Common error:** If you see `status=217/USER`, it means the `User=` value doesn't match a real user on the system. Fix it and run `sudo systemctl daemon-reload` before restarting.
 
 Enable and start:
 
