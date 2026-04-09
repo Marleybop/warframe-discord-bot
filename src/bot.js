@@ -124,8 +124,17 @@ async function registerCommands() {
 
   try {
     const rest = new REST().setToken(TOKEN);
-    await rest.put(Routes.applicationCommands(clientId), { body: commandDefinitions });
-    console.log(`[Commands] Registered ${commandDefinitions.length} slash commands`);
+    const guildId = process.env.GUILD_ID;
+    if (guildId) {
+      // Guild commands — instant propagation. Clear stale global commands.
+      await rest.put(Routes.applicationGuildCommands(clientId, guildId), { body: commandDefinitions });
+      await rest.put(Routes.applicationCommands(clientId), { body: [] });
+      console.log(`[Commands] Registered ${commandDefinitions.length} guild slash commands`);
+    } else {
+      // Global commands — can take up to an hour to propagate
+      await rest.put(Routes.applicationCommands(clientId), { body: commandDefinitions });
+      console.log(`[Commands] Registered ${commandDefinitions.length} global slash commands`);
+    }
   } catch (err) {
     console.error('[Commands] Registration failed:', err.message);
   }

@@ -46,7 +46,7 @@ export async function vaulted(interaction) {
       embeds: [new EmbedBuilder()
         .setAuthor({ name: 'Prime Vault' })
         .setTitle(`${total} Vaulted Items`)
-        .setDescription(lines.join('\n') + '\n\nUse `/vaulted <category>` to see the full list.')
+        .setDescription(lines.join('\n') + '\n\nSelect a category from the dropdown to see the full list.')
         .setColor(0xD4AF37)],
     });
   }
@@ -77,7 +77,7 @@ export async function vaulted(interaction) {
 
   for (const name of sorted) {
     const line = `\u2022 ${name}`;
-    if (currentLen + line.length + 1 > 3900 || current.length >= 40) {
+    if (currentLen + line.length + 1 > 3900) {
       embeds.push(current.join('\n'));
       current = [];
       currentLen = 0;

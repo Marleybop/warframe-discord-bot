@@ -3,6 +3,9 @@ import { getItemList } from '../services/market.js';
 // In-memory filtered lists built from the cached market data
 let marketItems = null;
 let relicNames = null;
+let warframeNames = null;
+let weaponNames = null;
+let modNames = null;
 
 async function ensureItems() {
   if (marketItems) return;
@@ -13,12 +16,29 @@ async function ensureItems() {
       .filter(i => i.i18n?.en?.name)
       .map(i => {
         const name = i.i18n.en.name.slice(0, 100);
-        return { name, value: name };
+        const tags = i.tags || [];
+        return { name, value: name, tags };
       });
+
     relicNames = marketItems.filter(i =>
       /^(Lith|Meso|Neo|Axi|Requiem)\s/i.test(i.name) && i.name.includes('Relic')
     );
-    console.log(`[autocomplete] Ready: ${marketItems.length} items, ${relicNames.length} relics`);
+    warframeNames = marketItems.filter(i =>
+      i.tags.includes('warframe') && !i.name.includes('Blueprint') && !i.name.includes('Neuroptics')
+      && !i.name.includes('Chassis') && !i.name.includes('Systems')
+    );
+    weaponNames = marketItems.filter(i =>
+      (i.tags.includes('weapon') || i.tags.includes('primary') || i.tags.includes('secondary')
+        || i.tags.includes('melee') || i.tags.includes('shotgun') || i.tags.includes('rifle'))
+      && !i.name.includes('Blueprint') && !i.name.includes('Barrel')
+      && !i.name.includes('Receiver') && !i.name.includes('Stock')
+      && !i.name.includes('Blade') && !i.name.includes('Hilt')
+    );
+    modNames = marketItems.filter(i =>
+      i.tags.includes('mod') || i.tags.includes('arcane')
+    );
+
+    console.log(`[autocomplete] Ready: ${marketItems.length} items, ${warframeNames.length} warframes, ${weaponNames.length} weapons, ${modNames.length} mods, ${relicNames.length} relics`);
   } catch (err) {
     console.error('[autocomplete] Failed to load items:', err.message);
   }
@@ -44,17 +64,22 @@ function fuzzyFilter(items, query, limit = 25) {
   return [...exact, ...startsWith, ...contains].slice(0, limit);
 }
 
+const COMMAND_LISTS = {
+  relic: () => relicNames || [],
+  warframe: () => warframeNames || [],
+  weapon: () => weaponNames || [],
+  mod: () => modNames || [],
+};
+
 export async function handleAutocomplete(interaction) {
-  // Refresh in-memory list if it was cleared (e.g. after cache expiry)
   if (!marketItems) await ensureItems();
 
   const focused = interaction.options.getFocused(true);
   const query = focused.value;
   const command = interaction.commandName;
 
-  const items = command === 'relic'
-    ? (relicNames || [])
-    : (marketItems || []);
+  const getList = COMMAND_LISTS[command];
+  const items = getList ? getList() : (marketItems || []);
 
   const choices = fuzzyFilter(items, query);
   await interaction.respond(choices);
