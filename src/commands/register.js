@@ -21,6 +21,7 @@ const commands = [
       opt.setName('item')
         .setDescription('Item name (e.g. "Nikana Prime Set")')
         .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   new SlashCommandBuilder()
@@ -30,6 +31,7 @@ const commands = [
       opt.setName('item')
         .setDescription('Item name (e.g. "Condition Overload")')
         .setRequired(true)
+        .setAutocomplete(true)
     ),
 
   new SlashCommandBuilder()
@@ -39,6 +41,7 @@ const commands = [
       opt.setName('name')
         .setDescription('Relic name (e.g. "Lith M7")')
         .setRequired(true)
+        .setAutocomplete(true)
     ),
 ].map(cmd => cmd.toJSON());
 
