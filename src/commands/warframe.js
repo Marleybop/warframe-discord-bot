@@ -62,6 +62,11 @@ export async function warframe(interaction) {
     return `${d.location}${chance ? ` \u2022 ${chance}` : ''}`;
   });
 
+  // Crafting components
+  const components = (wf.components || []).filter(c =>
+    c.name && c.name !== 'Blueprint' && c.itemCount
+  );
+
   // Search for augment mods
   let augments = [];
   try {
@@ -78,6 +83,14 @@ export async function warframe(interaction) {
   if (exalted) desc += `\n\n__Exalted__\n${exalted}`;
   desc += `\n\n__Abilities__\n${abilities}`;
   if (augments.length > 0) desc += `\n\n__Augments__\n${augments.join(', ')}`;
+  if (components.length > 0) {
+    const compLines = components.map(c => {
+      let line = `${c.name} x${c.itemCount}`;
+      if (c.ducats) line += ` \u2022 ${c.ducats} ducats`;
+      return line;
+    });
+    desc += `\n\n__Components__\n${compLines.join('\n')}`;
+  }
   if (farmLines.length > 0) desc += `\n\n__How to Farm__\n${farmLines.join('\n')}`;
 
   const embed = new EmbedBuilder()

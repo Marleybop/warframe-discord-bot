@@ -92,6 +92,19 @@ export async function weapon(interaction) {
     }
   }
 
+  // Crafting components
+  const components = (wp.components || []).filter(c =>
+    c.name && c.name !== 'Blueprint' && c.itemCount
+  );
+  if (components.length > 0) {
+    const compLines = components.map(c => {
+      let line = `${c.name} x${c.itemCount}`;
+      if (c.ducats) line += ` \u2022 ${c.ducats} ducats`;
+      return line;
+    });
+    desc += '\n\n__Components__\n' + compLines.join('\n');
+  }
+
   // Farm info
   const drops = [];
   for (const comp of wp.components || []) {

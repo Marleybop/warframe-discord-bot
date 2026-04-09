@@ -25,7 +25,7 @@ async function ensureItems() {
     );
     warframeNames = marketItems.filter(i =>
       i.tags.includes('warframe') && !i.name.includes('Blueprint') && !i.name.includes('Neuroptics')
-      && !i.name.includes('Chassis') && !i.name.includes('Systems')
+      && !i.name.includes('Chassis') && !i.name.includes('Systems') && !i.name.includes(' Set')
     );
     weaponNames = marketItems.filter(i =>
       (i.tags.includes('weapon') || i.tags.includes('primary') || i.tags.includes('secondary')
@@ -33,6 +33,13 @@ async function ensureItems() {
       && !i.name.includes('Blueprint') && !i.name.includes('Barrel')
       && !i.name.includes('Receiver') && !i.name.includes('Stock')
       && !i.name.includes('Blade') && !i.name.includes('Hilt')
+      && !i.name.includes('String') && !i.name.includes('Grip')
+      && !i.name.includes('Link') && !i.name.includes('Pouch')
+      && !i.name.includes('Head') && !i.name.includes('Lower Limb')
+      && !i.name.includes('Upper Limb') && !i.name.includes('Guard')
+      && !i.name.includes(' Set') && !i.name.includes('Handle')
+      && !i.name.includes('Ornament') && !i.name.includes('Stars')
+      && !i.name.includes('Boot') && !i.name.includes('Gauntlet')
     );
     modNames = marketItems.filter(i =>
       i.tags.includes('mod') || i.tags.includes('arcane')
