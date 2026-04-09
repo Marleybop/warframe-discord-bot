@@ -22,9 +22,12 @@ export async function relic(interaction) {
 
   const query = interaction.options.getString('name');
 
+  // Strip "Relic" suffix — the API doesn't include it in item names
+  const cleanQuery = query.replace(/\s*relic$/i, '').trim();
+
   let results;
   try {
-    results = await searchItems(query);
+    results = await searchItems(cleanQuery);
   } catch {
     return interaction.editReply({
       embeds: [new EmbedBuilder()
@@ -48,10 +51,10 @@ export async function relic(interaction) {
   }
 
   // Prefer the Intact version (base relic without refinement)
-  const lower = query.toLowerCase();
+  const lower = cleanQuery.toLowerCase();
   const intact = relics.find(r => {
     const n = r.name?.toLowerCase() || '';
-    return n.includes(lower.replace(' relic', '').trim()) &&
+    return n.includes(lower) &&
       !n.includes('exceptional') && !n.includes('flawless') && !n.includes('radiant');
   });
   const relic = intact || relics[0];
