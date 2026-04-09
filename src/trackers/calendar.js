@@ -6,6 +6,7 @@ export const key = 'calendar';
 
 const API_URL = 'https://api.warframestat.us/pc/calendar/';
 const TTL = 10 * 60 * 1000;
+const DAYS_TO_SHOW = 3;
 
 async function fetchCalendar() {
   return cached('tracker:calendar', TTL, async () => {
@@ -39,52 +40,46 @@ export async function build() {
   }
 
   const expiry = data.expiry ? new Date(data.expiry) : null;
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  const lines = [];
-  for (const day of data.days) {
-    if (!day.events || day.events.length === 0) continue;
+  // Filter to today + next few days with events
+  const upcoming = data.days
+    .filter(day => {
+      if (!day.events || day.events.length === 0) return false;
+      const gameDate = new Date(day.date);
+      return gameDate >= todayStart;
+    })
+    .slice(0, DAYS_TO_SHOW);
 
-    // Format the in-game date
+  if (upcoming.length === 0) {
+    return emptyEmbed('1999 Calendar', 'No upcoming events this week.');
+  }
+
+  const sections = upcoming.map((day, i) => {
     const gameDate = new Date(day.date);
     const dateStr = gameDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    const label = i === 0 ? `__${dateStr} \u2500 Today__` : `__${dateStr}__`;
 
-    for (const event of day.events) {
+    const eventLines = day.events.map(event => {
       const emoji = EVENT_EMOJI[event.type] || '\u2022';
 
       if (event.challenge) {
-        lines.push(`${emoji} **${dateStr}** \u2500 ${event.challenge.title}\n\u2003${event.challenge.description}`);
+        return `${emoji} **${event.challenge.title}**\n\u2003${event.challenge.description}`;
       } else if (event.reward) {
-        lines.push(`${emoji} **${dateStr}** \u2500 ${event.reward}`);
+        return `${emoji} **${event.reward}**`;
       } else if (event.upgrade) {
-        lines.push(`${emoji} **${dateStr}** \u2500 ${event.upgrade.title}\n\u2003${event.upgrade.description}`);
+        return `${emoji} **${event.upgrade.title}**\n\u2003${event.upgrade.description}`;
       }
-    }
-  }
+      return null;
+    }).filter(Boolean);
 
-  if (lines.length === 0) {
-    return emptyEmbed('1999 Calendar', 'No upcoming events.');
-  }
+    return `${label}\n${eventLines.join('\n')}`;
+  });
 
-  let desc = lines.join('\n');
+  let desc = sections.join('\n\n');
   if (expiry) {
-    desc += `\n\n**Resets** <t:${toUnix(expiry)}:R>`;
-  }
-
-  // Split into multiple embeds if too long
-  if (desc.length > 4000) {
-    const mid = desc.lastIndexOf('\n', 2000);
-    const first = desc.slice(0, mid);
-    const second = desc.slice(mid + 1);
-
-    return [
-      new EmbedBuilder()
-        .setAuthor({ name: '1999 Calendar' })
-        .setDescription(first)
-        .setColor(0x8B4513),
-      new EmbedBuilder()
-        .setDescription(second)
-        .setColor(0x8B4513),
-    ];
+    desc += `\n\n**Week resets** <t:${toUnix(expiry)}:R>`;
   }
 
   return new EmbedBuilder()
