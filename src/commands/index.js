@@ -11,8 +11,9 @@ import { mod } from './mod.js';
 import { ducats } from './ducats.js';
 import { riven } from './riven.js';
 import {
-  postRivenForm, handleAlphaSelect, handleWeaponSelect,
+  postRivenForm, handleCategorySelect, handleWeaponSelect,
   handleAddStat, handleStatSelect, handleSearchNow, handleRestart,
+  handlePageNext, handlePagePrev,
 } from './riven-form.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
@@ -38,11 +39,13 @@ const buttons = {
   riven_search_now: handleSearchNow,
   riven_add_stat: handleAddStat,
   riven_restart: handleRestart,
+  riven_page_next: handlePageNext,
+  riven_page_prev: handlePagePrev,
 };
 
 // Select menu handlers
 const selects = {
-  riven_alpha: handleAlphaSelect,
+  riven_category: handleCategorySelect,
   riven_weapon: handleWeaponSelect,
   riven_weapon_2: handleWeaponSelect,
   riven_stat_positive: handleStatSelect,
