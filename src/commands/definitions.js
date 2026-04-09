@@ -48,4 +48,34 @@ export const commandDefinitions = [
           { name: 'Archwing', value: 'Archwing' },
         )
     ),
+
+  new SlashCommandBuilder()
+    .setName('warframe')
+    .setDescription('Look up a Warframe — stats, abilities, and how to farm')
+    .addStringOption(opt =>
+      opt.setName('name')
+        .setDescription('Warframe name (e.g. "Saryn Prime")')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName('weapon')
+    .setDescription('Look up a weapon — stats, damage, and how to farm')
+    .addStringOption(opt =>
+      opt.setName('name')
+        .setDescription('Weapon name (e.g. "Acceltra")')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName('mod')
+    .setDescription('Look up a mod — stats per rank and drop sources')
+    .addStringOption(opt =>
+      opt.setName('name')
+        .setDescription('Mod name (e.g. "Condition Overload")')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
 ].map(cmd => cmd.toJSON());

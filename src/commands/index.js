@@ -4,6 +4,9 @@ import { price } from './price.js';
 import { where } from './where.js';
 import { relic } from './relic.js';
 import { vaulted } from './vaulted.js';
+import { warframe } from './warframe.js';
+import { weapon } from './weapon.js';
+import { mod } from './mod.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 
@@ -12,6 +15,9 @@ commands.set('price', price);
 commands.set('where', where);
 commands.set('relic', relic);
 commands.set('vaulted', vaulted);
+commands.set('warframe', warframe);
+commands.set('weapon', weapon);
+commands.set('mod', mod);
 
 export async function handleInteraction(interaction) {
   if (interaction.isAutocomplete()) {
