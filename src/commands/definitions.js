@@ -97,5 +97,36 @@ export const commandDefinitions = [
         .setDescription('Weapon name (e.g. "Braton")')
         .setRequired(true)
         .setAutocomplete(true)
+    )
+    .addStringOption(opt =>
+      opt.setName('positive')
+        .setDescription('Desired positive stat (e.g. "critical_chance")')
+        .setRequired(false)
+        .setAutocomplete(true)
+    )
+    .addStringOption(opt =>
+      opt.setName('negative')
+        .setDescription('Desired negative stat (e.g. "damage_vs_infested")')
+        .setRequired(false)
+        .setAutocomplete(true)
+    )
+    .addIntegerOption(opt =>
+      opt.setName('max_price')
+        .setDescription('Maximum buyout price in platinum')
+        .setRequired(false)
+    )
+    .addIntegerOption(opt =>
+      opt.setName('max_rolls')
+        .setDescription('Maximum number of re-rolls')
+        .setRequired(false)
+    )
+    .addStringOption(opt =>
+      opt.setName('sort')
+        .setDescription('Sort results by')
+        .setRequired(false)
+        .addChoices(
+          { name: 'Price (low to high)', value: 'price_asc' },
+          { name: 'Price (high to low)', value: 'price_desc' },
+        )
     ),
 ].map(cmd => cmd.toJSON());

@@ -9,6 +9,7 @@ let marketItems = null;
 let relicNames = null;
 let primePartNames = null;
 let rivenWeaponNames = null;
+let rivenStatNames = null;
 let warframeNames = null;
 let weaponNames = null;
 let modNames = null;
@@ -51,12 +52,20 @@ async function ensureItems() {
       .filter(i => i.i18n?.en?.name && i.ducats && i.ducats > 0 && i.tags?.includes('prime'))
       .map(i => ({ name: i.i18n.en.name.slice(0, 100), value: i.i18n.en.name.slice(0, 100) }));
 
-    // Load riven-eligible weapons from warframe.market
+    // Load riven data from warframe.market
     rivenWeaponNames = await cached('autocomplete:rivens', TTL, async () => {
       const res = await fetch('https://api.warframe.market/v1/riven/items', { headers: { Platform: 'pc' } });
       if (!res.ok) throw new Error(`riven items ${res.status}`);
       const json = await res.json();
       return json.payload.items.map(i => ({ name: i.item_name.slice(0, 100), value: i.item_name.slice(0, 100) }));
+    });
+    rivenStatNames = await cached('autocomplete:rivenStats', TTL, async () => {
+      const res = await fetch('https://api.warframe.market/v1/riven/attributes', { headers: { Platform: 'pc' } });
+      if (!res.ok) throw new Error(`riven attrs ${res.status}`);
+      const json = await res.json();
+      return json.payload.attributes
+        .filter(a => !a.search_only)
+        .map(a => ({ name: a.effect.slice(0, 100), value: a.url_name.slice(0, 100) }));
     });
 
     // Load warframestat.us lists for /warframe, /weapon, /mod (has ALL items, not just tradeable)
@@ -105,6 +114,13 @@ export async function handleAutocomplete(interaction) {
   const focused = interaction.options.getFocused(true);
   const query = focused.value;
   const command = interaction.commandName;
+  const optionName = focused.name;
+
+  // Riven stat fields get stat suggestions instead of weapon suggestions
+  if (command === 'riven' && (optionName === 'positive' || optionName === 'negative')) {
+    const choices = fuzzyFilter(rivenStatNames || [], query);
+    return interaction.respond(choices);
+  }
 
   const getList = COMMAND_LISTS[command];
   const items = getList ? getList() : (marketItems || []);

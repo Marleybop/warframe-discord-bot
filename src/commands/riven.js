@@ -15,30 +15,43 @@ async function getRivenItems() {
   });
 }
 
-async function searchAuctions(urlName) {
-  return cached(`riven:auctions:${urlName}`, TTL_SEARCH, async () => {
-    const res = await fetch(
-      `${V1_URL}/auctions/search?type=riven&weapon_url_name=${urlName}&sort_by=price_asc&buyout_policy=with`,
-      { headers: { Platform: 'pc' } }
-    );
+export async function getRivenAttributes() {
+  return cached('riven:attributes', TTL_LIST, async () => {
+    const res = await fetch(`${V1_URL}/riven/attributes`, { headers: { Platform: 'pc' } });
+    if (!res.ok) throw new Error(`riven attributes ${res.status}`);
+    const json = await res.json();
+    return json.payload.attributes;
+  });
+}
+
+async function searchAuctions(urlName, opts = {}) {
+  const params = new URLSearchParams({
+    type: 'riven',
+    weapon_url_name: urlName,
+    sort_by: opts.sort || 'price_asc',
+    buyout_policy: 'with',
+  });
+  if (opts.positive) params.append('positive_stats', opts.positive);
+  if (opts.negative) params.append('negative_stats', opts.negative);
+
+  const cacheKey = `riven:auctions:${urlName}:${params.toString()}`;
+  return cached(cacheKey, TTL_SEARCH, async () => {
+    const res = await fetch(`${V1_URL}/auctions/search?${params}`, { headers: { Platform: 'pc' } });
     if (!res.ok) throw new Error(`riven auctions ${res.status}`);
     const json = await res.json();
     return json.payload.auctions;
   });
 }
 
-function formatStats(stats) {
-  return stats.map(s => {
-    const sign = s.positive ? '+' : '';
-    const val = s.value > 0 ? `+${s.value}` : `${s.value}`;
-    return `${val}${s.units === 'percent' ? '%' : ''} ${s.effect || s.url_name}`;
-  }).join('\n');
-}
-
 export async function riven(interaction) {
   await interaction.deferReply();
 
   const query = interaction.options.getString('weapon');
+  const positiveStat = interaction.options.getString('positive');
+  const negativeStat = interaction.options.getString('negative');
+  const maxPrice = interaction.options.getInteger('max_price');
+  const maxRolls = interaction.options.getInteger('max_rolls');
+  const sort = interaction.options.getString('sort') || 'price_asc';
 
   const items = await getRivenItems();
   if (!items) {
@@ -63,10 +76,28 @@ export async function riven(interaction) {
     });
   }
 
-  // Fetch live auctions
+  // Resolve stat names to url_names if needed
+  const attributes = await getRivenAttributes();
+  const resolveStat = (input) => {
+    if (!input) return null;
+    const l = input.toLowerCase();
+    const attr = attributes.find(a => a.url_name === l)
+      || attributes.find(a => a.effect?.toLowerCase() === l)
+      || attributes.find(a => a.effect?.toLowerCase().includes(l));
+    return attr?.url_name || null;
+  };
+
+  const positiveUrl = resolveStat(positiveStat);
+  const negativeUrl = resolveStat(negativeStat);
+
+  // Fetch auctions
   let auctions;
   try {
-    auctions = await searchAuctions(weapon.url_name);
+    auctions = await searchAuctions(weapon.url_name, {
+      sort,
+      positive: positiveUrl,
+      negative: negativeUrl,
+    });
   } catch {
     return interaction.editReply({
       embeds: [new EmbedBuilder()
@@ -75,6 +106,11 @@ export async function riven(interaction) {
     });
   }
 
+  // Apply local filters
+  let filtered = (auctions || []).filter(a => a.buyout_price && !a.closed);
+  if (maxPrice) filtered = filtered.filter(a => a.buyout_price <= maxPrice);
+  if (maxRolls != null) filtered = filtered.filter(a => (a.item?.re_rolls || 0) <= maxRolls);
+
   const embed = new EmbedBuilder()
     .setAuthor({ name: 'Riven Market' })
     .setTitle(`${weapon.item_name} Riven`)
@@ -82,44 +118,43 @@ export async function riven(interaction) {
 
   if (weapon.thumb) embed.setThumbnail(assetUrl(weapon.thumb));
 
-  if (!auctions || auctions.length === 0) {
-    embed.setDescription('No rivens currently listed for sale.');
+  // Build filter description
+  const filters = [];
+  if (positiveStat) filters.push(`+${positiveStat}`);
+  if (negativeStat) filters.push(`-${negativeStat}`);
+  if (maxPrice) filters.push(`\u2264${maxPrice}p`);
+  if (maxRolls != null) filters.push(`\u2264${maxRolls} rolls`);
+  const filterStr = filters.length > 0 ? `Filters: ${filters.join(' \u2022 ')}\n` : '';
+
+  if (filtered.length === 0) {
+    embed.setDescription(`${filterStr}No rivens found matching your criteria.`);
     return interaction.editReply({ embeds: [embed] });
   }
 
-  // Show cheapest buyout listings
-  const buyouts = auctions
-    .filter(a => a.buyout_price && !a.closed)
-    .sort((a, b) => a.buyout_price - b.buyout_price)
-    .slice(0, 5);
+  const top = filtered.slice(0, 5);
 
-  if (buyouts.length === 0) {
-    embed.setDescription(`${auctions.length} auctions found but none with buyout prices.`);
-    return interaction.editReply({ embeds: [embed] });
-  }
-
-  const lines = buyouts.map(a => {
+  const lines = top.map(a => {
     const stats = (a.item?.attributes || []).map(s => {
       const val = s.value > 0 ? `+${s.value}` : `${s.value}`;
       return `${val}% ${s.url_name.replace(/_/g, ' ')}`;
     }).join(', ');
 
-    const rerolls = a.item?.re_rolls != null ? ` \u2022 ${a.item.re_rolls} rolls` : '';
-    const mr = a.item?.mastery_level ? ` \u2022 MR ${a.item.mastery_level}` : '';
+    const rerolls = a.item?.re_rolls != null ? `${a.item.re_rolls} rolls` : '';
+    const mr = a.item?.mastery_level ? `MR ${a.item.mastery_level}` : '';
+    const meta = [mr, rerolls].filter(Boolean).join(' \u2022 ');
     const seller = a.owner?.ingame_name || '?';
     const status = a.owner?.status === 'ingame' ? ' \u{1F7E2}' : '';
 
-    return `**${a.buyout_price}p**${mr}${rerolls}\n\u2003${stats}\n\u2003Seller: ${seller}${status}`;
+    return `**${a.buyout_price}p**${meta ? ` \u2022 ${meta}` : ''}\n\u2003${stats}\n\u2003Seller: ${seller}${status}`;
   });
 
-  // Price range summary
-  const prices = buyouts.map(a => a.buyout_price);
+  const prices = top.map(a => a.buyout_price);
   const low = Math.min(...prices);
   const high = Math.max(...prices);
   const summary = low === high ? `**${low}p**` : `**${low}p** \u2013 **${high}p**`;
 
   embed.setDescription(
-    `${auctions.length} listings \u2022 Buyouts from ${summary}\n\n` +
+    `${filterStr}${filtered.length} listings \u2022 Buyouts from ${summary}\n\n` +
     lines.join('\n\n')
   );
 
