@@ -78,4 +78,14 @@ export const commandDefinitions = [
         .setRequired(true)
         .setAutocomplete(true)
     ),
+
+  new SlashCommandBuilder()
+    .setName('ducats')
+    .setDescription('Check ducat value of a Prime part, or see top ducat items')
+    .addStringOption(opt =>
+      opt.setName('item')
+        .setDescription('Item name (leave empty for top ducat values)')
+        .setRequired(false)
+        .setAutocomplete(true)
+    ),
 ].map(cmd => cmd.toJSON());

@@ -1,6 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { getWarframe } from '../services/warframestat.js';
-import { searchItems } from '../services/warframestat.js';
+import { getWarframe, searchItems } from '../services/warframestat.js';
 
 export async function warframe(interaction) {
   await interaction.deferReply();
@@ -26,48 +25,34 @@ export async function warframe(interaction) {
     });
   }
 
-  // Stats
+  // ── Stats ──
   const stats = [
     `Health: **${wf.health || '?'}** \u2022 Shield: **${wf.shield || '?'}**`,
     `Armor: **${wf.armor || '?'}** \u2022 Energy: **${wf.power || '?'}**`,
     `Sprint: **${wf.sprintSpeed || '?'}** \u2022 Mastery: **${wf.masteryReq || 0}**`,
   ].join('\n');
 
-  // Abilities
-  const abilities = (wf.abilities || []).map(a =>
-    `**${a.name}** \u2500 ${a.description?.split('.')[0]?.replace(/<[^>]+>/g, '') || 'No description'}.`
-  ).join('\n');
+  let desc = `__Stats__\n${stats}`;
 
-  // Passive
+  // ── Passive ──
   const passive = wf.passiveDescription
     ? wf.passiveDescription.replace(/<[^>]+>/g, '').replace(/\|[A-Z_]+\|/g, '?')
     : null;
+  if (passive) desc += `\n\n__Passive__\n${passive}`;
 
-  // Exalted weapon
+  // ── Abilities ──
+  const abilities = (wf.abilities || []).map(a =>
+    `**${a.name}** \u2500 ${a.description?.split('.')[0]?.replace(/<[^>]+>/g, '') || 'No description'}.`
+  ).join('\n');
+  desc += `\n\n__Abilities__\n${abilities}`;
+
+  // ── Exalted Weapon ──
   const exalted = wf.exalted?.length > 0
     ? wf.exalted.map(e => e.split('/').pop().replace(/([A-Z])/g, ' $1').trim()).join(', ')
     : null;
+  if (exalted) desc += `\n\n__Exalted__\n${exalted}`;
 
-  // Farm location from components
-  const drops = [];
-  for (const comp of wf.components || []) {
-    for (const drop of comp.drops || []) {
-      if (!drops.some(d => d.location === drop.location)) {
-        drops.push(drop);
-      }
-    }
-  }
-  const farmLines = drops.slice(0, 5).map(d => {
-    const chance = d.chance ? `${(d.chance * 100).toFixed(1)}%` : '';
-    return `${d.location}${chance ? ` \u2022 ${chance}` : ''}`;
-  });
-
-  // Crafting components
-  const components = (wf.components || []).filter(c =>
-    c.name && c.name !== 'Blueprint' && c.itemCount
-  );
-
-  // Search for augment mods
+  // ── Augments ──
   let augments = [];
   try {
     const baseName = wf.name.replace(' Prime', '');
@@ -76,22 +61,34 @@ export async function warframe(interaction) {
       .filter(m => m.isAugment && m.compatName?.toLowerCase().includes(baseName.toLowerCase()))
       .map(m => m.name)
       .slice(0, 8);
-  } catch { /* augment lookup is optional */ }
-
-  let desc = `__Stats__\n${stats}`;
-  if (passive) desc += `\n\n__Passive__\n${passive}`;
-  if (exalted) desc += `\n\n__Exalted__\n${exalted}`;
-  desc += `\n\n__Abilities__\n${abilities}`;
+  } catch { /* optional */ }
   if (augments.length > 0) desc += `\n\n__Augments__\n${augments.join(', ')}`;
+
+  // ── Components & How to Get ──
+  const components = (wf.components || []).filter(c => c.name && c.itemCount);
   if (components.length > 0) {
     const compLines = components.map(c => {
-      let line = `${c.name} x${c.itemCount}`;
-      if (c.ducats) line += ` \u2022 ${c.ducats} ducats`;
+      let line = `**${c.name}** x${c.itemCount}`;
+      if (c.ducats) line += ` (${c.ducats} ducats)`;
+
+      const drops = (c.drops || []).slice(0, 3);
+      if (drops.length > 0) {
+        const dropStr = drops.map(d => {
+          const chance = d.chance ? `${(d.chance * 100).toFixed(1)}%` : '';
+          return `${d.location}${chance ? ` ${chance}` : ''}`;
+        }).join(', ');
+        line += `\n\u2003\u21B3 ${dropStr}`;
+      }
       return line;
     });
     desc += `\n\n__Components__\n${compLines.join('\n')}`;
   }
-  if (farmLines.length > 0) desc += `\n\n__How to Farm__\n${farmLines.join('\n')}`;
+
+  // ── Crafting Cost ──
+  if (wf.buildPrice) {
+    const buildTime = wf.buildTime ? `${Math.round(wf.buildTime / 3600)}h` : '?';
+    desc += `\n\n__Crafting__\n${wf.buildPrice.toLocaleString()} Credits \u2022 ${buildTime} build time`;
+  }
 
   const embed = new EmbedBuilder()
     .setTitle(wf.name)

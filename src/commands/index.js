@@ -7,6 +7,7 @@ import { vaulted } from './vaulted.js';
 import { warframe } from './warframe.js';
 import { weapon } from './weapon.js';
 import { mod } from './mod.js';
+import { ducats } from './ducats.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 
@@ -18,6 +19,7 @@ commands.set('vaulted', vaulted);
 commands.set('warframe', warframe);
 commands.set('weapon', weapon);
 commands.set('mod', mod);
+commands.set('ducats', ducats);
 
 export async function handleInteraction(interaction) {
   if (interaction.isAutocomplete()) {
