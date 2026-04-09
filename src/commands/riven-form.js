@@ -118,9 +118,12 @@ export async function handleRivenSubmit(interaction) {
   const resolveStat = (input) => {
     if (!input) return null;
     const l = input.toLowerCase().trim();
-    return (attributes.find(a => a.url_name === l)
+    // Also try with underscores for url_name format
+    const u = l.replace(/\s+/g, '_');
+    return (attributes.find(a => a.url_name === l || a.url_name === u)
       || attributes.find(a => a.effect?.toLowerCase() === l)
-      || attributes.find(a => a.effect?.toLowerCase().includes(l)))?.url_name || null;
+      || attributes.find(a => a.effect?.toLowerCase().startsWith(l))
+      || attributes.find(a => a.url_name.startsWith(u)))?.url_name || null;
   };
 
   const resolveMultiple = (input) => {
