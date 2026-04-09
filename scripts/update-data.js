@@ -51,26 +51,33 @@ for (const file of FILES) {
   }
 }
 
-// Build item image lookup from WFCD warframe-items data
-console.log('\nBuilding item image lookup...');
+// Build item image lookup and vaulted items list from WFCD warframe-items data
+console.log('\nBuilding item image lookup + vaulted list...');
 const imageMap = {};
+const vaultedItems = {};
 for (const category of ITEM_CATEGORIES) {
   const url = `https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json/${category}.json`;
   try {
     const res = await fetch(url);
     if (!res.ok) { console.error(`  ${category} FAILED: HTTP ${res.status}`); continue; }
     const items = await res.json();
-    let count = 0;
+    let imgCount = 0;
     for (const item of items) {
       if (item.uniqueName && item.imageName) {
         imageMap[item.uniqueName.toLowerCase()] = {
           img: item.imageName,
           wiki: item.wikiaThumbnail || null,
         };
-        count++;
+        imgCount++;
+      }
+      // Collect vaulted Prime items (skip components/parts, keep main items)
+      if (item.name?.includes('Prime') && item.vaulted === true) {
+        const cat = item.category || category;
+        if (!vaultedItems[cat]) vaultedItems[cat] = [];
+        vaultedItems[cat].push(item.name);
       }
     }
-    console.log(`  ${category}: ${count} items with images`);
+    console.log(`  ${category}: ${imgCount} images`);
   } catch (err) {
     console.error(`  ${category} FAILED: ${err.message}`);
   }
@@ -80,5 +87,11 @@ const imageJson = JSON.stringify(imageMap);
 writeFileSync(resolve(dataDir, 'itemImages.json'), imageJson);
 const imgKb = Math.round(imageJson.length / 1024);
 console.log(`  itemImages.json (${imgKb}KB) - ${Object.keys(imageMap).length} item images`);
+
+const vaultedJson = JSON.stringify(vaultedItems, null, 2);
+writeFileSync(resolve(dataDir, 'vaulted.json'), vaultedJson);
+const vaultKb = Math.round(vaultedJson.length / 1024);
+const vaultCount = Object.values(vaultedItems).reduce((sum, arr) => sum + arr.length, 0);
+console.log(`  vaulted.json (${vaultKb}KB) - ${vaultCount} vaulted items`);
 
 console.log('\nDone! Data files are up to date.');

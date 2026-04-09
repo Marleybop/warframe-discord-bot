@@ -43,6 +43,24 @@ const commands = [
         .setRequired(true)
         .setAutocomplete(true)
     ),
+
+  new SlashCommandBuilder()
+    .setName('vaulted')
+    .setDescription('Show vaulted Prime items')
+    .addStringOption(opt =>
+      opt.setName('category')
+        .setDescription('Category (warframes, primary, secondary, melee) or leave empty for summary')
+        .setRequired(false)
+        .addChoices(
+          { name: 'All (summary)', value: 'all' },
+          { name: 'Warframes', value: 'Warframes' },
+          { name: 'Primary Weapons', value: 'Primary' },
+          { name: 'Secondary Weapons', value: 'Secondary' },
+          { name: 'Melee Weapons', value: 'Melee' },
+          { name: 'Sentinels', value: 'Sentinels' },
+          { name: 'Archwing', value: 'Archwing' },
+        )
+    ),
 ].map(cmd => cmd.toJSON());
 
 const rest = new REST().setToken(TOKEN);

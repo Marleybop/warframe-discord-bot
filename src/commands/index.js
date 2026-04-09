@@ -3,12 +3,14 @@
 import { price } from './price.js';
 import { where } from './where.js';
 import { relic } from './relic.js';
+import { vaulted } from './vaulted.js';
 import { handleAutocomplete } from './autocomplete.js';
 
 const commands = new Map();
 commands.set('price', price);
 commands.set('where', where);
 commands.set('relic', relic);
+commands.set('vaulted', vaulted);
 
 export async function handleInteraction(interaction) {
   if (interaction.isAutocomplete()) {
