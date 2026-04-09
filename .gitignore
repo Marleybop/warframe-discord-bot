@@ -2,6 +2,8 @@ node_modules/
 .env
 .claude-flow/
 .claude/
+memory/
 data/cache.db
 data/cache.db-wal
 data/cache.db-shm
+*.png
