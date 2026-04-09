@@ -86,8 +86,8 @@ export async function mod(interaction) {
     .setColor(color);
 
   if (m.wikiaUrl) embed.setURL(m.wikiaUrl);
-  if (m.imageName) embed.setThumbnail(`https://cdn.warframestat.us/img/${m.imageName}`);
   if (m.wikiaThumbnail) embed.setImage(m.wikiaThumbnail);
+  else if (m.imageName) embed.setThumbnail(`https://cdn.warframestat.us/img/${m.imageName}`);
 
   await interaction.editReply({ embeds: [embed] });
 }
