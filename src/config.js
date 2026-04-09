@@ -43,4 +43,8 @@ export const CHANNELS = {
   varzia:      process.env.VARZIA_CHANNEL_ID,
   archimedea:  process.env.ARCHIMEDEA_CHANNEL_ID,
   fomorian:    process.env.FOMORIAN_CHANNEL_ID,
+  steelpath:   process.env.STEELPATH_CHANNEL_ID,
+  news:        process.env.NEWS_CHANNEL_ID,
+  simaris:     process.env.SIMARIS_CHANNEL_ID,
+  calendar:    process.env.CALENDAR_CHANNEL_ID,
 };

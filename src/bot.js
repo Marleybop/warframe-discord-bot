@@ -73,10 +73,14 @@ async function updateTrackers() {
   }
 
   // Run all enabled trackers in parallel
+  // Some trackers fetch their own data (extract returns null), others use worldstate
   await Promise.all(
     trackers
       .filter(t => CHANNELS[t.key])
-      .map(t => updateChannel(t.key, t.build(t.extract(ws))))
+      .map(t => {
+        const data = t.extract(ws);
+        return updateChannel(t.key, t.build(data));
+      })
   );
 
   const active = trackers.filter(t => CHANNELS[t.key]).map(t => t.key);
