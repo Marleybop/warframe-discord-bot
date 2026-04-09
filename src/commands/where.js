@@ -20,13 +20,15 @@ export async function where(interaction) {
   }
 
   if (!drops || drops.length === 0) {
-    const wikiSearch = encodeURIComponent(query);
+    // Link to the base item's wiki page (strip part names like "Receiver", "Barrel", etc.)
+    const baseName = query.replace(/\s+(Blueprint|Receiver|Barrel|Stock|Blade|Hilt|Guard|String|Grip|Handle|Link|Neuroptics|Chassis|Systems|Pouch|Head|Lower Limb|Upper Limb|Set)$/i, '');
+    const wikiPage = baseName.replace(/\s+/g, '_');
     return interaction.editReply({
       embeds: [new EmbedBuilder()
         .setDescription(
           `No drop sources found for **${query}**\n\n` +
           `This item may come from Invasions, events, or other sources not tracked in drop tables.\n` +
-          `[Check the Wiki](https://wiki.warframe.com/w/Special:Search?query=${wikiSearch})`
+          `[Check the Wiki](https://wiki.warframe.com/w/${wikiPage}#Acquisition)`
         )
         .setColor(0xFF9900)],
     });
