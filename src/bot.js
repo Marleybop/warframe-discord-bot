@@ -2,7 +2,7 @@ import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'di
 import { TOKEN, INTERVAL, CHANNELS } from './config.js';
 import { fetchWorldState } from './services/warframe-api.js';
 import { trackers } from './trackers/index.js';
-import { handleInteraction, commandDefinitions } from './commands/index.js';
+import { handleInteraction, commandDefinitions, postRivenForm } from './commands/index.js';
 
 if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
   console.error('Set DISCORD_TOKEN in .env');
@@ -172,6 +172,24 @@ client.once('clientReady', async () => {
     console.log('Active trackers:', active.map(t => t.key).join(', '));
   }
   console.log(`Refresh: ${INTERVAL / 1000}s`);
+
+  // Post riven form if channel is configured
+  if (CHANNELS.rivenForm) {
+    try {
+      const ch = await client.channels.fetch(CHANNELS.rivenForm);
+      // Check if form already exists in recent messages
+      const msgs = await ch.messages.fetch({ limit: 10 });
+      const hasForm = msgs.some(m => m.author.id === client.user.id && m.components.length > 0);
+      if (!hasForm) {
+        await postRivenForm(ch);
+        console.log('[Riven] Posted search form');
+      } else {
+        console.log('[Riven] Form already exists in channel');
+      }
+    } catch (err) {
+      console.error('[Riven] Failed to post form:', err.message);
+    }
+  }
 
   await updateTrackers();
   setInterval(updateTrackers, INTERVAL);

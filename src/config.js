@@ -46,4 +46,5 @@ export const CHANNELS = {
   steelpath:   process.env.STEELPATH_CHANNEL_ID,
   news:        process.env.NEWS_CHANNEL_ID,
   calendar:    process.env.CALENDAR_CHANNEL_ID,
+  rivenForm:   process.env.RIVEN_FORM_CHANNEL_ID,
 };

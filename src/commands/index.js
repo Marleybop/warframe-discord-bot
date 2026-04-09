@@ -1,5 +1,6 @@
 // Command registry — maps command names to handler modules
 
+import { MessageFlags } from 'discord.js';
 import { price } from './price.js';
 import { where } from './where.js';
 import { relic } from './relic.js';
@@ -9,7 +10,10 @@ import { weapon } from './weapon.js';
 import { mod } from './mod.js';
 import { ducats } from './ducats.js';
 import { riven } from './riven.js';
-import { handleRivenButton, handleRivenSubmit, postRivenForm } from './riven-form.js';
+import {
+  postRivenForm, handleCategorySelect, handleWeaponSelect,
+  handleAddStat, handleStatSelect, handleSearchNow, handleRestart,
+} from './riven-form.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 export { postRivenForm } from './riven-form.js';
@@ -26,9 +30,23 @@ commands.set('ducats', ducats);
 commands.set('riven', riven);
 commands.set('setup-riven', async (interaction) => {
   await postRivenForm(interaction.channel);
-  const { MessageFlags } = await import('discord.js');
   await interaction.reply({ content: 'Riven search form posted!', flags: MessageFlags.Ephemeral });
 });
+
+// Button handlers
+const buttons = {
+  riven_search_now: handleSearchNow,
+  riven_add_stat: handleAddStat,
+  riven_restart: handleRestart,
+};
+
+// Select menu handlers
+const selects = {
+  riven_category: handleCategorySelect,
+  riven_weapon: handleWeaponSelect,
+  riven_weapon_2: handleWeaponSelect,
+  riven_stat_positive: handleStatSelect,
+};
 
 export async function handleInteraction(interaction) {
   // Autocomplete
@@ -43,20 +61,22 @@ export async function handleInteraction(interaction) {
 
   // Button clicks
   if (interaction.isButton()) {
-    try {
-      if (interaction.customId === 'riven_form_open') return handleRivenButton(interaction);
-    } catch (err) {
-      console.error('[button] Error:', err.message);
+    const handler = buttons[interaction.customId];
+    if (handler) {
+      try { await handler(interaction); } catch (err) {
+        console.error(`[button:${interaction.customId}] Error:`, err.message);
+      }
     }
     return;
   }
 
-  // Modal submissions
-  if (interaction.isModalSubmit()) {
-    try {
-      if (interaction.customId === 'riven_form_submit') return handleRivenSubmit(interaction);
-    } catch (err) {
-      console.error('[modal] Error:', err.message);
+  // Select menus
+  if (interaction.isStringSelectMenu()) {
+    const handler = selects[interaction.customId];
+    if (handler) {
+      try { await handler(interaction); } catch (err) {
+        console.error(`[select:${interaction.customId}] Error:`, err.message);
+      }
     }
     return;
   }
@@ -71,7 +91,7 @@ export async function handleInteraction(interaction) {
     await handler(interaction);
   } catch (err) {
     console.error(`[/${interaction.commandName}] Error:`, err.message);
-    const reply = { content: 'Something went wrong. Try again.', ephemeral: true };
+    const reply = { content: 'Something went wrong. Try again.', flags: MessageFlags.Ephemeral };
     if (interaction.replied || interaction.deferred) {
       await interaction.followUp(reply);
     } else {
