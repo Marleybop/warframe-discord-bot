@@ -7,6 +7,7 @@ const TTL = 6 * 60 * 60 * 1000; // 6 hours
 // In-memory filtered lists
 let marketItems = null;
 let relicNames = null;
+let primePartNames = null;
 let warframeNames = null;
 let weaponNames = null;
 let modNames = null;
@@ -45,6 +46,10 @@ async function ensureItems() {
       /^(Lith|Meso|Neo|Axi|Requiem)\s/i.test(i.name) && i.name.includes('Relic')
     );
 
+    primePartNames = items
+      .filter(i => i.i18n?.en?.name && i.ducats && i.ducats > 0 && i.tags?.includes('prime'))
+      .map(i => ({ name: i.i18n.en.name.slice(0, 100), value: i.i18n.en.name.slice(0, 100) }));
+
     // Load warframestat.us lists for /warframe, /weapon, /mod (has ALL items, not just tradeable)
     warframeNames = await cached('autocomplete:warframes', TTL, () => fetchNameList('warframes'));
     weaponNames = await cached('autocomplete:weapons', TTL, () => fetchNameList('weapons'));
@@ -81,6 +86,7 @@ const COMMAND_LISTS = {
   warframe: () => warframeNames || [],
   weapon: () => weaponNames || [],
   mod: () => modNames || [],
+  ducats: () => primePartNames || [],
 };
 
 export async function handleAutocomplete(interaction) {
