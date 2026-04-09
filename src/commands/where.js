@@ -20,10 +20,15 @@ export async function where(interaction) {
   }
 
   if (!drops || drops.length === 0) {
+    const wikiSearch = encodeURIComponent(query);
     return interaction.editReply({
       embeds: [new EmbedBuilder()
-        .setDescription(`No drop sources found for **${query}**`)
-        .setColor(0xFF0000)],
+        .setDescription(
+          `No drop sources found for **${query}**\n\n` +
+          `This item may come from Invasions, events, or other sources not tracked in drop tables.\n` +
+          `[Check the Wiki](https://wiki.warframe.com/w/Special:Search?query=${wikiSearch})`
+        )
+        .setColor(0xFF9900)],
     });
   }
 
