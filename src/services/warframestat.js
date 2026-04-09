@@ -1,7 +1,12 @@
 // Community API wrapper — items, drops, search, enriched worldstate
 // https://api.warframestat.us
 
+import { cached } from './cache.js';
+
 const BASE_URL = 'https://api.warframestat.us';
+
+const TTL_SEARCH = 30 * 60 * 1000;  // 30 minutes — search results
+const TTL_ITEM = 6 * 60 * 60 * 1000; // 6 hours — item data rarely changes
 
 async function get(path) {
   const res = await fetch(`${BASE_URL}${path}`);
@@ -10,29 +15,43 @@ async function get(path) {
 }
 
 export async function searchItems(query) {
-  return get(`/items/search/${encodeURIComponent(query)}`);
+  return cached(`wfstat:items:${query.toLowerCase()}`, TTL_SEARCH, () =>
+    get(`/items/search/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function getItem(query) {
-  return get(`/items/${encodeURIComponent(query)}`);
+  return cached(`wfstat:item:${query.toLowerCase()}`, TTL_ITEM, () =>
+    get(`/items/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function searchDrops(query) {
-  return get(`/drops/search/${encodeURIComponent(query)}`);
+  return cached(`wfstat:drops:${query.toLowerCase()}`, TTL_SEARCH, () =>
+    get(`/drops/search/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function getWarframe(query) {
-  return get(`/warframes/${encodeURIComponent(query)}`);
+  return cached(`wfstat:warframe:${query.toLowerCase()}`, TTL_ITEM, () =>
+    get(`/warframes/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function getWeapon(query) {
-  return get(`/weapons/${encodeURIComponent(query)}`);
+  return cached(`wfstat:weapon:${query.toLowerCase()}`, TTL_ITEM, () =>
+    get(`/weapons/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function getMod(query) {
-  return get(`/mods/${encodeURIComponent(query)}`);
+  return cached(`wfstat:mod:${query.toLowerCase()}`, TTL_ITEM, () =>
+    get(`/mods/${encodeURIComponent(query)}`)
+  );
 }
 
 export async function getArcane(query) {
-  return get(`/arcanes/${encodeURIComponent(query)}`);
+  return cached(`wfstat:arcane:${query.toLowerCase()}`, TTL_ITEM, () =>
+    get(`/arcanes/${encodeURIComponent(query)}`)
+  );
 }

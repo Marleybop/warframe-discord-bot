@@ -1,29 +1,31 @@
 import { getItemList } from '../services/market.js';
 
-// Cached item lists
+// In-memory filtered lists built from the cached market data
 let marketItems = null;
-let marketItemsTime = 0;
 let relicNames = null;
-const CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
-async function getMarketItems() {
-  if (marketItems && Date.now() - marketItemsTime < CACHE_TTL) return marketItems;
+async function ensureItems() {
+  if (marketItems) return;
   try {
+    console.log('[autocomplete] Loading item list...');
     const items = await getItemList();
-    marketItems = items.map(i => ({
-      name: i.i18n?.en?.name || i.slug,
-      value: i.i18n?.en?.name || i.slug,
-    }));
-    // Extract relic names from market items
+    marketItems = items
+      .filter(i => i.i18n?.en?.name)
+      .map(i => {
+        const name = i.i18n.en.name.slice(0, 100);
+        return { name, value: name };
+      });
     relicNames = marketItems.filter(i =>
       /^(Lith|Meso|Neo|Axi|Requiem)\s/i.test(i.name) && i.name.includes('Relic')
     );
-    marketItemsTime = Date.now();
-  } catch {
-    // Keep stale cache on failure
+    console.log(`[autocomplete] Ready: ${marketItems.length} items, ${relicNames.length} relics`);
+  } catch (err) {
+    console.error('[autocomplete] Failed to load items:', err.message);
   }
-  return marketItems || [];
 }
+
+// Pre-warm on import
+ensureItems();
 
 function fuzzyFilter(items, query, limit = 25) {
   if (!query) return items.slice(0, limit);
@@ -43,18 +45,17 @@ function fuzzyFilter(items, query, limit = 25) {
 }
 
 export async function handleAutocomplete(interaction) {
+  // Refresh in-memory list if it was cleared (e.g. after cache expiry)
+  if (!marketItems) await ensureItems();
+
   const focused = interaction.options.getFocused(true);
   const query = focused.value;
   const command = interaction.commandName;
 
-  await getMarketItems(); // ensure cache is warm
+  const items = command === 'relic'
+    ? (relicNames || [])
+    : (marketItems || []);
 
-  let choices;
-  if (command === 'relic') {
-    choices = fuzzyFilter(relicNames || [], query);
-  } else {
-    choices = fuzzyFilter(marketItems || [], query);
-  }
-
+  const choices = fuzzyFilter(items, query);
   await interaction.respond(choices);
 }
