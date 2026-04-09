@@ -648,6 +648,10 @@
     "value": "Electronic waste Disposal",
     "desc": "Kill 200 Techrot with Melee Weapons"
   },
+  "/Lotus/Types/Challenges/Seasons/Weekly/SeasonWeeklyKillEnemiesWithHeadshots": {
+    "value": "Not a Warning Shot",
+    "desc": "Kill 100 enemies with headshots"
+  },
   "/Lotus/Types/Challenges/Seasons/WeeklyHard/SeasonWeeklyHardCompleteConquest": {
     "value": "Voluntary Specimen",
     "desc": "Complete a run of Deep Archimedea or Temporal Archimedea"
@@ -15833,7 +15837,7 @@
     "value": "Strun Wraith Blueprint"
   },
   "/lotus/types/recipes/weapons/twinviperswraithblueprint": {
-    "value": "Wraith Twin Vipers Blueprint"
+    "value": "Twin Vipers Wraith Blueprint"
   },
   "/lotus/types/recipes/weapons/weaponparts/deravandalbarrel": {
     "value": "Dera Vandal Barrel"
@@ -15893,13 +15897,13 @@
     "value": "Strun Wraith Stock"
   },
   "/lotus/types/recipes/weapons/weaponparts/twinviperswraithbarrel": {
-    "value": "Wraith Twin Vipers Barrel"
+    "value": "Twin Vipers Wraith Barrel"
   },
   "/lotus/types/recipes/weapons/weaponparts/twinviperswraithlink": {
-    "value": "Wraith Twin Vipers Link"
+    "value": "Twin Vipers Wraith Link"
   },
   "/lotus/types/recipes/weapons/weaponparts/twinviperswraithreceiver": {
-    "value": "Wraith Twin Vipers Receiver"
+    "value": "Twin Vipers Wraith Receiver"
   },
   "/lotus/types/restoratives/deployables/lisetturretavatar": {
     "value": "Liset Turret Avatar"

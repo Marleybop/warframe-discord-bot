@@ -27,6 +27,13 @@ const FILES = [
   },
 ];
 
+// WFCD item categories to download for image lookups
+const ITEM_CATEGORIES = [
+  'Mods', 'Weapons', 'Warframes', 'Sentinels', 'Pets',
+  'Archwing', 'Melee', 'Primary', 'Secondary', 'Misc',
+  'Resources', 'Skins', 'Arcanes', 'Relics',
+];
+
 mkdirSync(dataDir, { recursive: true });
 
 console.log('Updating WFCD data files...\n');
@@ -43,5 +50,35 @@ for (const file of FILES) {
     console.error(`  ${file.path} FAILED: ${err.message}`);
   }
 }
+
+// Build item image lookup from WFCD warframe-items data
+console.log('\nBuilding item image lookup...');
+const imageMap = {};
+for (const category of ITEM_CATEGORIES) {
+  const url = `https://raw.githubusercontent.com/WFCD/warframe-items/master/data/json/${category}.json`;
+  try {
+    const res = await fetch(url);
+    if (!res.ok) { console.error(`  ${category} FAILED: HTTP ${res.status}`); continue; }
+    const items = await res.json();
+    let count = 0;
+    for (const item of items) {
+      if (item.uniqueName && item.imageName) {
+        imageMap[item.uniqueName.toLowerCase()] = {
+          img: item.imageName,
+          wiki: item.wikiaThumbnail || null,
+        };
+        count++;
+      }
+    }
+    console.log(`  ${category}: ${count} items with images`);
+  } catch (err) {
+    console.error(`  ${category} FAILED: ${err.message}`);
+  }
+}
+
+const imageJson = JSON.stringify(imageMap);
+writeFileSync(resolve(dataDir, 'itemImages.json'), imageJson);
+const imgKb = Math.round(imageJson.length / 1024);
+console.log(`  itemImages.json (${imgKb}KB) - ${Object.keys(imageMap).length} item images`);
 
 console.log('\nDone! Data files are up to date.');
