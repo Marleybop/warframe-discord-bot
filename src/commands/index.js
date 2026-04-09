@@ -10,10 +10,8 @@ import { weapon } from './weapon.js';
 import { mod } from './mod.js';
 import { ducats } from './ducats.js';
 import { riven } from './riven.js';
-import { postRivenForm, handleRivenOpen, handleRivenSubmit } from './riven-form.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
-export { postRivenForm } from './riven-form.js';
 
 const commands = new Map();
 commands.set('price', price);
@@ -25,10 +23,6 @@ commands.set('weapon', weapon);
 commands.set('mod', mod);
 commands.set('ducats', ducats);
 commands.set('riven', riven);
-commands.set('setup-riven', async (interaction) => {
-  await postRivenForm(interaction.channel);
-  await interaction.reply({ content: 'Riven search form posted!', flags: MessageFlags.Ephemeral });
-});
 
 export async function handleInteraction(interaction) {
   // Autocomplete
@@ -37,26 +31,6 @@ export async function handleInteraction(interaction) {
       await handleAutocomplete(interaction);
     } catch (err) {
       console.error('[autocomplete] Error:', err.message);
-    }
-    return;
-  }
-
-  // Button clicks
-  if (interaction.isButton()) {
-    if (interaction.customId === 'riven_open') {
-      try { await handleRivenOpen(interaction); } catch (err) {
-        console.error('[button:riven_open] Error:', err.message);
-      }
-    }
-    return;
-  }
-
-  // Modal submissions
-  if (interaction.isModalSubmit()) {
-    if (interaction.customId === 'riven_submit') {
-      try { await handleRivenSubmit(interaction); } catch (err) {
-        console.error('[modal:riven_submit] Error:', err.message);
-      }
     }
     return;
   }

@@ -130,8 +130,4 @@ export const commandDefinitions = [
         )
     ),
 
-  new SlashCommandBuilder()
-    .setName('setup-riven')
-    .setDescription('Post a riven search form in this channel (admin only)')
-    .setDefaultMemberPermissions(0x8),
 ].map(cmd => cmd.toJSON());
