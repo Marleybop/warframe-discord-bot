@@ -53,17 +53,43 @@ export async function weapon(interaction) {
     });
   }
 
+  // Check for Incarnon form
+  const attacks = wp.attacks || [];
+  const hasIncarnon = attacks.some(a => a.name?.toLowerCase().includes('incarnon'));
+
   let desc = '';
   if (wp.category) desc += `**${wp.category}**`;
   if (wp.masteryReq) desc += ` \u2022 MR ${wp.masteryReq}`;
   if (wp.noise) desc += ` \u2022 ${wp.noise}`;
   if (wp.trigger) desc += ` \u2022 ${wp.trigger}`;
+  if (hasIncarnon) desc += ` \u2022 \u2728 Incarnon`;
   desc += '\n\n';
 
   desc += '__Stats__\n' + lines.join('\n');
 
   if (dmgBreakdown.length > 0) {
     desc += '\n\n__Damage__\n' + dmgBreakdown.join(' \u2022 ');
+  }
+
+  // Incarnon form stats
+  if (hasIncarnon) {
+    const incarnon = attacks.find(a => a.name?.toLowerCase() === 'incarnon form');
+    if (incarnon) {
+      const iLines = [];
+      if (incarnon.damage) {
+        const dmg = Object.entries(incarnon.damage)
+          .filter(([, v]) => v > 0)
+          .map(([k, v]) => `${k}: ${Math.round(v)}`)
+          .join(' \u2022 ');
+        if (dmg) iLines.push(dmg);
+      }
+      if (incarnon.crit_chance) iLines.push(`Crit: ${(incarnon.crit_chance * 100).toFixed(1)}%`);
+      if (incarnon.crit_mult) iLines.push(`Multi: ${incarnon.crit_mult}x`);
+      if (incarnon.status_chance) iLines.push(`Status: ${(incarnon.status_chance * 100).toFixed(1)}%`);
+      if (iLines.length > 0) {
+        desc += '\n\n__Incarnon Form__\n' + iLines.join('\n');
+      }
+    }
   }
 
   // Farm info
