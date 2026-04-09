@@ -48,6 +48,7 @@ export async function vaulted(interaction) {
         .setTitle(`${total} Vaulted Items`)
         .setDescription(lines.join('\n') + '\n\nSelect a category from the dropdown to see the full list.')
         .setColor(0xD4AF37)],
+      ephemeral: true,
     });
   }
 
@@ -98,5 +99,5 @@ export async function vaulted(interaction) {
     return embed;
   });
 
-  await interaction.reply({ embeds: result.slice(0, 10) });
+  await interaction.reply({ embeds: result.slice(0, 10), ephemeral: true });
 }

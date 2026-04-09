@@ -4,7 +4,7 @@ import { searchDrops } from '../services/warframestat.js';
 const MAX_RESULTS = 15;
 
 export async function where(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('item');
 

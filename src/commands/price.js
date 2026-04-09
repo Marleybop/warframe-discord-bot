@@ -29,7 +29,7 @@ function formatStats(stats) {
 }
 
 export async function price(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('item');
   const items = await getItemList();

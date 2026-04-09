@@ -18,7 +18,7 @@ const TIER_COLORS = {
 };
 
 export async function relic(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('name');
 

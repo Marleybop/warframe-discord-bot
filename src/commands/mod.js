@@ -18,7 +18,7 @@ const POLARITY_EMOJI = {
 };
 
 export async function mod(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('name');
 

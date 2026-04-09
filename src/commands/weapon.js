@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { getWeapon } from '../services/warframestat.js';
 
 export async function weapon(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('name');
 

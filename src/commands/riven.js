@@ -44,7 +44,7 @@ async function searchAuctions(urlName, opts = {}) {
 }
 
 export async function riven(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('weapon');
   const positiveStat = interaction.options.getString('positive');

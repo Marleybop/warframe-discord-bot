@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { getWarframe, searchItems } from '../services/warframestat.js';
 
 export async function warframe(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('name');
 

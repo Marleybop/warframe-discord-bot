@@ -2,7 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { getItemList, assetUrl } from '../services/market.js';
 
 export async function ducats(interaction) {
-  await interaction.deferReply();
+  await interaction.deferReply({ ephemeral: true });
 
   const query = interaction.options.getString('item');
 
