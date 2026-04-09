@@ -20,11 +20,10 @@ import * as archimedea from './archimedea.js';
 import * as fomorian from './fomorian.js';
 import * as steelpath from './steelpath.js';
 import * as news from './news.js';
-import * as simaris from './simaris.js';
 import * as calendar from './calendar.js';
 
 export const trackers = [
   fissures, baro, sortie, archon, invasions, storms,
   cycles, darvo, nightwave, circuit, alerts, boosters, events,
-  varzia, archimedea, fomorian, steelpath, news, simaris, calendar,
+  varzia, archimedea, fomorian, steelpath, news, calendar,
 ];

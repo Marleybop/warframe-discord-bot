@@ -40,15 +40,27 @@ export async function build() {
   }
 
   const expiry = data.expiry ? new Date(data.expiry) : null;
+  const activation = data.activation ? new Date(data.activation) : null;
+
+  // Calendar uses in-game 1999 dates — map them to real-world dates
+  // The activation date is when this week's rotation started
+  const daysWithDates = data.days.map((day, i) => {
+    const gameDate = new Date(day.date);
+    // Calculate real-world date: activation + day offset from first day
+    const firstGameDate = new Date(data.days[0]?.date || day.date);
+    const dayOffset = Math.round((gameDate - firstGameDate) / (24 * 60 * 60 * 1000));
+    const realDate = activation ? new Date(activation.getTime() + dayOffset * 24 * 60 * 60 * 1000) : gameDate;
+    return { ...day, realDate };
+  });
+
   const now = new Date();
   const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  // Filter to today + next few days with events
-  const upcoming = data.days
+  // Filter to today + next N days with events
+  const upcoming = daysWithDates
     .filter(day => {
       if (!day.events || day.events.length === 0) return false;
-      const gameDate = new Date(day.date);
-      return gameDate >= todayStart;
+      return day.realDate >= todayStart;
     })
     .slice(0, DAYS_TO_SHOW);
 
@@ -57,9 +69,9 @@ export async function build() {
   }
 
   const sections = upcoming.map((day, i) => {
-    const gameDate = new Date(day.date);
-    const dateStr = gameDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    const label = i === 0 ? `__${dateStr} \u2500 Today__` : `__${dateStr}__`;
+    const dateStr = day.realDate.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const isToday = day.realDate.toDateString() === now.toDateString();
+    const label = isToday ? `__${dateStr} \u2500 Today__` : `__${dateStr}__`;
 
     const eventLines = day.events.map(event => {
       const emoji = EVENT_EMOJI[event.type] || '\u2022';
