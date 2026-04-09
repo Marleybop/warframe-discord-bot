@@ -9,7 +9,7 @@ import { weapon } from './weapon.js';
 import { mod } from './mod.js';
 import { ducats } from './ducats.js';
 import { riven } from './riven.js';
-import { handleRivenButton, handleRivenSubmit } from './riven-form.js';
+import { handleRivenButton, handleRivenSubmit, postRivenForm } from './riven-form.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 export { postRivenForm } from './riven-form.js';
@@ -26,7 +26,8 @@ commands.set('ducats', ducats);
 commands.set('riven', riven);
 commands.set('setup-riven', async (interaction) => {
   await postRivenForm(interaction.channel);
-  await interaction.reply({ content: 'Riven search form posted!', ephemeral: true });
+  const { MessageFlags } = await import('discord.js');
+  await interaction.reply({ content: 'Riven search form posted!', flags: MessageFlags.Ephemeral });
 });
 
 export async function handleInteraction(interaction) {

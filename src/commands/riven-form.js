@@ -1,6 +1,6 @@
 import {
   EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle,
-  ModalBuilder, TextInputBuilder, TextInputStyle,
+  ModalBuilder, TextInputBuilder, TextInputStyle, MessageFlags,
 } from 'discord.js';
 import { getRivenAttributes } from './riven.js';
 import { assetUrl } from '../services/market.js';
@@ -81,7 +81,7 @@ export async function handleRivenButton(interaction) {
 
 // Handle modal submission — search and DM results
 export async function handleRivenSubmit(interaction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const weaponQuery = interaction.fields.getTextInputValue('weapon');
   const positiveQuery = interaction.fields.getTextInputValue('positive') || null;
