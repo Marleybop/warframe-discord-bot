@@ -1,8 +1,10 @@
 import { EmbedBuilder } from 'discord.js';
-import { toUnix, emptyEmbed } from '../utils/embed-helpers.js';
+import { toUnix } from '../utils/embed-helpers.js';
 import { cached } from '../services/cache.js';
+import * as cache from '../services/cache.js';
 
 export const key = 'news';
+export const feed = true; // Posts new messages instead of editing one
 
 const API_URL = 'https://api.warframestat.us/pc/news/';
 const TTL = 10 * 60 * 1000;
@@ -19,50 +21,56 @@ export function extract() {
   return null;
 }
 
+// Returns only NEW articles that haven't been posted yet
 export async function build() {
   let articles;
   try {
     articles = await fetchNews();
   } catch {
-    return [emptyEmbed('Warframe News', 'Could not fetch news.')];
+    return [];
   }
 
-  if (!articles || articles.length === 0) {
-    return [emptyEmbed('Warframe News', 'No news available.')];
-  }
+  if (!articles || articles.length === 0) return [];
 
-  // Filter out placeholder/permanent entries, sort by date descending
-  const recent = articles
-    .filter(a => {
-      const date = new Date(a.date);
-      return date.getFullYear() > 2000 && a.message;
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
-    .slice(0, 5);
+  // Filter out placeholder entries
+  const valid = articles.filter(a => {
+    const date = new Date(a.date);
+    return date.getFullYear() > 2000 && a.message;
+  });
 
-  if (recent.length === 0) {
-    return [emptyEmbed('Warframe News', 'No recent news.')];
-  }
+  // Check which articles we've already posted
+  const postedIds = cache.get('news:posted') || [];
+  const postedSet = new Set(postedIds);
 
-  const embeds = recent.map((article, i) => {
+  const newArticles = valid.filter(a => !postedSet.has(a.id));
+  if (newArticles.length === 0) return [];
+
+  // Sort oldest first so they post in chronological order
+  newArticles.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+  const embeds = newArticles.map(article => {
     const date = new Date(article.date);
     const embed = new EmbedBuilder()
+      .setAuthor({ name: 'Warframe News' })
       .setDescription(
         `**[${article.message}](${article.link})**\n` +
         `<t:${toUnix(date)}:R>`
       )
-      .setColor(article.update ? 0x00BFFF : article.primeAccess ? 0xD4AF37 : 0x3498DB);
+      .setColor(article.update ? 0x00BFFF : article.primeAccess ? 0xD4AF37 : 0x3498DB)
+      .setTimestamp(date);
 
-    if (i === 0) embed.setAuthor({ name: 'Warframe News' });
-
-    // Show banner image on the first article
     const img = article.imageLink;
-    if (img && i === 0 && !img.includes('placeholder')) {
+    if (img && !img.includes('placeholder')) {
       embed.setImage(img);
     }
 
-    return embed;
+    return { embed, id: article.id };
   });
+
+  // Mark these as posted
+  const allPosted = [...postedIds, ...newArticles.map(a => a.id)];
+  // Keep last 100 to prevent unbounded growth
+  cache.set('news:posted', allPosted.slice(-100), 30 * 24 * 60 * 60 * 1000);
 
   return embeds;
 }

@@ -65,6 +65,26 @@ async function updateChannel(key, result) {
   }
 }
 
+async function updateFeed(key, result) {
+  const channelId = CHANNELS[key];
+  if (!channelId) return;
+
+  try {
+    const channel = await client.channels.fetch(channelId);
+    const items = await Promise.resolve(result);
+    if (!items || !Array.isArray(items) || items.length === 0) return;
+
+    // Post each new item as a separate message
+    for (const item of items) {
+      const embed = item.embed || item;
+      await channel.send({ embeds: [embed] });
+    }
+    console.log(`[${key}] Posted ${items.length} new items`);
+  } catch (err) {
+    console.error(`[${key}] Feed update failed:`, err.message);
+  }
+}
+
 async function updateTrackers() {
   const ws = await fetchWorldState();
   if (!ws) {
@@ -73,14 +93,21 @@ async function updateTrackers() {
   }
 
   // Run all enabled trackers in parallel
-  // Some trackers fetch their own data (extract returns null), others use worldstate
+  const enabled = trackers.filter(t => CHANNELS[t.key]);
+  const standard = enabled.filter(t => !t.feed);
+  const feeds = enabled.filter(t => t.feed);
+
+  // Standard trackers: extract → build → edit single message
   await Promise.all(
-    trackers
-      .filter(t => CHANNELS[t.key])
-      .map(t => {
-        const data = t.extract(ws);
-        return updateChannel(t.key, t.build(data));
-      })
+    standard.map(t => {
+      const data = t.extract(ws);
+      return updateChannel(t.key, t.build(data));
+    })
+  );
+
+  // Feed trackers: post new messages for each new item
+  await Promise.all(
+    feeds.map(t => updateFeed(t.key, t.build(t.extract(ws))))
   );
 
   const active = trackers.filter(t => CHANNELS[t.key]).map(t => t.key);

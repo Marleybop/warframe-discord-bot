@@ -6,7 +6,7 @@ export const key = 'calendar';
 
 const API_URL = 'https://api.warframestat.us/pc/calendar/';
 const TTL = 10 * 60 * 1000;
-const DAYS_TO_SHOW = 3;
+const DAYS_TO_SHOW = 14;
 
 async function fetchCalendar() {
   return cached('tracker:calendar', TTL, async () => {
@@ -77,13 +77,31 @@ export async function build() {
     return `${label}\n${eventLines.join('\n')}`;
   });
 
-  let desc = sections.join('\n\n');
-  if (expiry) {
-    desc += `\n\n**Week resets** <t:${toUnix(expiry)}:R>`;
+  // Split into multiple embeds if needed (4000 char limit per embed)
+  const embeds = [];
+  let current = [];
+  let currentLen = 0;
+
+  for (const section of sections) {
+    if (currentLen + section.length + 2 > 3800 && current.length > 0) {
+      embeds.push(current.join('\n\n'));
+      current = [];
+      currentLen = 0;
+    }
+    current.push(section);
+    currentLen += section.length + 2;
+  }
+  if (current.length > 0) {
+    let last = current.join('\n\n');
+    if (expiry) last += `\n\n**Week resets** <t:${toUnix(expiry)}:R>`;
+    embeds.push(last);
   }
 
-  return new EmbedBuilder()
-    .setAuthor({ name: '1999 Calendar' })
-    .setDescription(desc)
-    .setColor(0x8B4513);
+  return embeds.map((desc, i) => {
+    const embed = new EmbedBuilder()
+      .setDescription(desc)
+      .setColor(0x8B4513);
+    if (i === 0) embed.setAuthor({ name: '1999 Calendar' });
+    return embed;
+  });
 }
