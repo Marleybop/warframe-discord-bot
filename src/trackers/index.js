@@ -15,8 +15,12 @@ import * as circuit from './circuit.js';
 import * as alerts from './alerts.js';
 import * as boosters from './boosters.js';
 import * as events from './events.js';
+import * as varzia from './varzia.js';
+import * as archimedea from './archimedea.js';
+import * as fomorian from './fomorian.js';
 
 export const trackers = [
   fissures, baro, sortie, archon, invasions, storms,
   cycles, darvo, nightwave, circuit, alerts, boosters, events,
+  varzia, archimedea, fomorian,
 ];

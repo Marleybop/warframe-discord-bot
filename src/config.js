@@ -40,4 +40,7 @@ export const CHANNELS = {
   alerts:      process.env.ALERTS_CHANNEL_ID,
   boosters:    process.env.BOOSTERS_CHANNEL_ID,
   events:      process.env.EVENTS_CHANNEL_ID,
+  varzia:      process.env.VARZIA_CHANNEL_ID,
+  archimedea:  process.env.ARCHIMEDEA_CHANNEL_ID,
+  fomorian:    process.env.FOMORIAN_CHANNEL_ID,
 };
