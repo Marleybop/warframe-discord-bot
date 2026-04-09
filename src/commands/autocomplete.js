@@ -1,51 +1,56 @@
 import { getItemList } from '../services/market.js';
+import { cached } from '../services/cache.js';
 
-// In-memory filtered lists built from the cached market data
+const WFSTAT_URL = 'https://api.warframestat.us';
+const TTL = 6 * 60 * 60 * 1000; // 6 hours
+
+// In-memory filtered lists
 let marketItems = null;
 let relicNames = null;
 let warframeNames = null;
 let weaponNames = null;
 let modNames = null;
 
+async function fetchNameList(endpoint) {
+  const res = await fetch(`${WFSTAT_URL}/${endpoint}/`);
+  if (!res.ok) throw new Error(`${endpoint} ${res.status}`);
+  const data = await res.json();
+  // Extract top-level item names (filter out nested components, patchlogs, etc.)
+  const seen = new Set();
+  return data
+    .filter(item => {
+      if (!item.name || !item.category) return false;
+      if (seen.has(item.name)) return false;
+      seen.add(item.name);
+      return true;
+    })
+    .map(item => ({ name: item.name.slice(0, 100), value: item.name.slice(0, 100) }));
+}
+
 async function ensureItems() {
   if (marketItems) return;
   try {
-    console.log('[autocomplete] Loading item list...');
+    console.log('[autocomplete] Loading item lists...');
+
+    // Load warframe.market items for /price and /where
     const items = await getItemList();
     marketItems = items
       .filter(i => i.i18n?.en?.name)
       .map(i => {
         const name = i.i18n.en.name.slice(0, 100);
-        const tags = i.tags || [];
-        return { name, value: name, tags };
+        return { name, value: name };
       });
 
     relicNames = marketItems.filter(i =>
       /^(Lith|Meso|Neo|Axi|Requiem)\s/i.test(i.name) && i.name.includes('Relic')
     );
-    warframeNames = marketItems.filter(i =>
-      i.tags.includes('warframe') && !i.name.includes('Blueprint') && !i.name.includes('Neuroptics')
-      && !i.name.includes('Chassis') && !i.name.includes('Systems') && !i.name.includes(' Set')
-    );
-    weaponNames = marketItems.filter(i =>
-      (i.tags.includes('weapon') || i.tags.includes('primary') || i.tags.includes('secondary')
-        || i.tags.includes('melee') || i.tags.includes('shotgun') || i.tags.includes('rifle'))
-      && !i.name.includes('Blueprint') && !i.name.includes('Barrel')
-      && !i.name.includes('Receiver') && !i.name.includes('Stock')
-      && !i.name.includes('Blade') && !i.name.includes('Hilt')
-      && !i.name.includes('String') && !i.name.includes('Grip')
-      && !i.name.includes('Link') && !i.name.includes('Pouch')
-      && !i.name.includes('Head') && !i.name.includes('Lower Limb')
-      && !i.name.includes('Upper Limb') && !i.name.includes('Guard')
-      && !i.name.includes(' Set') && !i.name.includes('Handle')
-      && !i.name.includes('Ornament') && !i.name.includes('Stars')
-      && !i.name.includes('Boot') && !i.name.includes('Gauntlet')
-    );
-    modNames = marketItems.filter(i =>
-      i.tags.includes('mod') || i.tags.includes('arcane')
-    );
 
-    console.log(`[autocomplete] Ready: ${marketItems.length} items, ${warframeNames.length} warframes, ${weaponNames.length} weapons, ${modNames.length} mods, ${relicNames.length} relics`);
+    // Load warframestat.us lists for /warframe, /weapon, /mod (has ALL items, not just tradeable)
+    warframeNames = await cached('autocomplete:warframes', TTL, () => fetchNameList('warframes'));
+    weaponNames = await cached('autocomplete:weapons', TTL, () => fetchNameList('weapons'));
+    modNames = await cached('autocomplete:mods', TTL, () => fetchNameList('mods'));
+
+    console.log(`[autocomplete] Ready: ${marketItems.length} market items, ${warframeNames.length} warframes, ${weaponNames.length} weapons, ${modNames.length} mods, ${relicNames.length} relics`);
   } catch (err) {
     console.error('[autocomplete] Failed to load items:', err.message);
   }
