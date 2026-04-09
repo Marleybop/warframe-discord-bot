@@ -130,4 +130,8 @@ export const commandDefinitions = [
         )
     ),
 
+  new SlashCommandBuilder()
+    .setName('help')
+    .setDescription('Show all bot commands and features'),
+
 ].map(cmd => cmd.toJSON());

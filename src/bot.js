@@ -3,6 +3,7 @@ import { TOKEN, INTERVAL, CHANNELS } from './config.js';
 import { fetchWorldState } from './services/warframe-api.js';
 import { trackers } from './trackers/index.js';
 import { handleInteraction, commandDefinitions } from './commands/index.js';
+import { buildGuideEmbeds } from './commands/guide.js';
 
 if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
   console.error('Set DISCORD_TOKEN in .env');
@@ -172,6 +173,21 @@ client.once('clientReady', async () => {
     console.log('Active trackers:', active.map(t => t.key).join(', '));
   }
   console.log(`Refresh: ${INTERVAL / 1000}s`);
+
+  // Post bot guide to commands channel if configured
+  if (CHANNELS.botCommands) {
+    try {
+      const ch = await client.channels.fetch(CHANNELS.botCommands);
+      const msgs = await ch.messages.fetch({ limit: 10 });
+      const hasGuide = msgs.some(m => m.author.id === client.user.id && m.embeds.length >= 4);
+      if (!hasGuide) {
+        await ch.send({ embeds: buildGuideEmbeds() });
+        console.log('[Guide] Posted bot guide');
+      }
+    } catch (err) {
+      console.error('[Guide] Failed:', err.message);
+    }
+  }
 
   await updateTrackers();
   setInterval(updateTrackers, INTERVAL);

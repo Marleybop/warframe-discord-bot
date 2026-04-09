@@ -1,103 +1,104 @@
 # Warframe Tracker
 
-Discord bot that posts live-updating Warframe world state data into your server channels. Each tracker owns a single message and edits it on a timer — no spam, just a constantly-refreshing dashboard.
+Discord bot that tracks Warframe world state with live-updating embeds and interactive slash commands. Powered by DE's official API, warframe.market, and warframestat.us.
 
-## Trackers
+## Features
 
-| Tracker | What it shows |
+### Live Trackers (19 channels)
+
+Each tracker owns a single message and edits it every 60 seconds — no spam, just a constantly-refreshing dashboard.
+
+| Category | Trackers |
 |---|---|
-| **Fissures** | All active void fissures grouped by relic tier (Lith through Omnia) |
-| **Baro Ki'Teer** | Arrival countdown, relay location, and full inventory when active |
-| **Sortie** | Daily 3-mission sortie with boss, modifiers, and node names |
-| **Archon Hunt** | Weekly archon, missions, and locations |
-| **Invasions** | Faction wars with reward names and visual progress bars |
-| **Void Storms** | Railjack fissures with relic tier and mission type |
-| **World Cycles** | Earth, Cetus, Orb Vallis, and Cambion Drift day/night status |
-| **Darvo's Deal** | Daily deal with discount, price, and stock remaining |
-| **Nightwave** | Active daily/weekly/elite challenges with full descriptions |
-| **The Circuit** | This week's Warframe and weapon choices |
+| **Missions** | Void Fissures, Void Storms, Sortie, Archon Hunt |
+| **Traders** | Baro Ki'Teer, Varzia (Prime Resurgence), Darvo's Deal |
+| **World** | World Cycles, Invasions, Alerts, Events, News |
+| **Endgame** | Nightwave, Steel Path, Deep Archimedea, The Circuit |
+| **Other** | Global Boosters, Fomorian/Razorback, 1999 Calendar |
+
+### Slash Commands (10 commands)
+
+All responses are **ephemeral** — only the user who typed the command sees the result.
+
+| Command | Description |
+|---|---|
+| `/price <item>` | Market prices (48h + 90d stats, set breakdowns) |
+| `/where <item>` | Drop locations and sources |
+| `/relic <name>` | Relic contents grouped by rarity |
+| `/warframe <name>` | Stats, abilities, augments, components, farm locations |
+| `/weapon <name>` | Stats, damage, incarnon, riven dispo, components |
+| `/mod <name>` | Stats per rank, drop sources, mod card image |
+| `/riven <weapon>` | Live riven auctions with stat/price/roll filters |
+| `/ducats [item]` | Ducat value of a Prime part (or top 20) |
+| `/vaulted [category]` | Browse all vaulted Prime items |
+| `/help` | Command reference and bot info |
+
+### Images
+
+- Merged reward images on invasions (both attacker + defender)
+- Relic tier thumbnails on fissures
+- Planet images on Baro's relay
+- Item thumbnails on Darvo's deal and events
+- Mod card images from the wiki
+
+### Infrastructure
+
+- **SQLite caching** — API responses cached with TTL, stale fallback on failure
+- **Autocomplete** — all slash commands have type-filtered autocomplete
+- **Auto-registration** — slash commands register on startup
+- **Daily data updates** — WFCD game data refreshes every 24h
 
 ## Prerequisites
 
-You need two things installed before starting:
-
-**1. Node.js 18 or higher**
-
-Check if you have it: open a terminal and run `node -v`. If it prints `v18.0.0` or higher, you're good. If not, install it:
-
-- **Windows**: Go to [nodejs.org](https://nodejs.org/), download the **LTS** installer, and run it. Accept all defaults.
-- **macOS**: Go to [nodejs.org](https://nodejs.org/) and download the **LTS** installer, or run `brew install node` if you use Homebrew.
-- **Ubuntu/Debian**: Run these two commands:
-  ```bash
-  curl -fsSL https://deb.nodesource.com/setup_22.x | sudo bash -
-  sudo apt install -y nodejs
-  ```
-- **Arch**: Run `sudo pacman -S nodejs npm`
-
-After installing, verify with `node -v` and `npm -v` — both should print a version number.
-
-**2. Git**
-
-Check if you have it: run `git --version`. If not:
-
-- **Windows**: Download from [git-scm.com](https://git-scm.com/download/win) and install with defaults.
-- **macOS**: Run `xcode-select --install` or download from [git-scm.com](https://git-scm.com/download/mac).
-- **Linux**: Run `sudo apt install git` (Ubuntu/Debian) or `sudo pacman -S git` (Arch).
-
-## Creating a Discord Bot
-
-You need to do this **before** setup, because the bot won't start without a token.
-
-1. Go to [discord.com/developers/applications](https://discord.com/developers/applications) and log in
-2. Click the **New Application** button in the top right. Give it a name (e.g. "Warframe Tracker")
-3. In the left sidebar, click **Bot**
-4. Click **Reset Token**, then **Yes, do it!**
-5. Click **Copy** — save this token somewhere safe (you'll need it in a moment). You can only see it once.
-6. In the left sidebar, click **OAuth2**, then **URL Generator**
-7. Under **Scopes**, tick `bot`
-8. Under **Bot Permissions** (appears after ticking bot), tick these four:
-   - `Send Messages`
-   - `Embed Links`
-   - `Read Message History`
-   - `View Channels`
-9. Scroll down and copy the **Generated URL**
-10. Open that URL in your browser, pick your Discord server from the dropdown, and click **Authorize**
-
-The bot should now appear in your server (offline until you start it).
+- **Node.js 18+** — check with `node -v`
+- **Git** — check with `git --version`
 
 ## Setup
 
-### Step 1 — Clone and install
-
-Open a terminal and run:
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/Marleybop/warframe-discord-bot.git
 cd warframe-discord-bot
-npm run setup
+npm install
+npm run update-data
 ```
 
-You should see it install `discord.js` and download game data files. If you get an error like `npm: command not found`, go back to Prerequisites and install Node.js.
+### 2. Create a Discord bot
 
-### Step 2 — Configure the bot
+1. Go to [discord.com/developers/applications](https://discord.com/developers/applications)
+2. Click **New Application**, name it
+3. **Bot** tab > Reset Token > copy the token
+4. **OAuth2 > URL Generator** > tick `bot` and `applications.commands`
+5. Under **Bot Permissions**, tick: Send Messages, Embed Links, Read Message History, View Channels, Attach Files
+6. Open the generated URL to invite the bot to your server
 
-Open the `.env` file in any text editor (Notepad, nano, VS Code — whatever you have).
+### 3. Configure
 
-Paste your bot token after `DISCORD_TOKEN=`:
+Copy `.env.example` to `.env` and fill in:
 
 ```env
-DISCORD_TOKEN=paste_your_token_here
+DISCORD_TOKEN=your_bot_token
+CLIENT_ID=your_application_id
+GUILD_ID=your_server_id
+
+# Add channel IDs for trackers you want (leave blank to disable)
+FISSURE_CHANNEL_ID=123456789
+BARO_CHANNEL_ID=123456789
+# ... etc
 ```
 
-Then add channel IDs for the trackers you want. To get a channel ID:
-1. In Discord, go to **Settings > Advanced** and turn on **Developer Mode**
-2. Right-click the channel you want to use > **Copy Channel ID**
-3. Paste it after the `=` sign
+Get channel IDs: Discord Settings > Advanced > Developer Mode > right-click channel > Copy Channel ID.
+
+### 4. Start
+
+```bash
+npm start
+```
+
+## Available Channel IDs
 
 ```env
-DISCORD_TOKEN=paste_your_token_here
-REFRESH_INTERVAL_SECONDS=60
-
 FISSURE_CHANNEL_ID=
 BARO_CHANNEL_ID=
 SORTIE_CHANNEL_ID=
@@ -108,165 +109,82 @@ CYCLES_CHANNEL_ID=
 DARVO_CHANNEL_ID=
 NIGHTWAVE_CHANNEL_ID=
 CIRCUIT_CHANNEL_ID=
+ALERTS_CHANNEL_ID=
+BOOSTERS_CHANNEL_ID=
+EVENTS_CHANNEL_ID=
+VARZIA_CHANNEL_ID=
+ARCHIMEDEA_CHANNEL_ID=
+FOMORIAN_CHANNEL_ID=
+STEELPATH_CHANNEL_ID=
+NEWS_CHANNEL_ID=
+CALENDAR_CHANNEL_ID=
+BOT_COMMANDS_CHANNEL_ID=
 ```
 
-Leave any line blank to disable that tracker. You can use the same channel ID for multiple trackers if you want them all in one place.
-
-### Step 3 — Start the bot
-
-```bash
-npm start
-```
-
-You should see output like:
+## Project Structure
 
 ```
-Logged in as YourBot#1234
-Active trackers: fissures, baro, sortie
-Refresh: 60s
+src/
+  bot.js              # Discord client, update loop, startup
+  config.js           # ENV loading, channel mapping
+  commands/           # Slash commands + autocomplete
+    definitions.js    # Command registration definitions
+    index.js          # Command router + interaction handler
+    autocomplete.js   # Type-filtered autocomplete
+    price.js          # /price
+    where.js          # /where
+    relic.js          # /relic
+    warframe.js       # /warframe
+    weapon.js         # /weapon
+    mod.js            # /mod
+    riven.js          # /riven
+    ducats.js         # /ducats
+    vaulted.js        # /vaulted
+    help.js           # /help
+    guide.js          # Bot guide embeds
+  trackers/           # Live-updating channel trackers
+    index.js          # Tracker registry
+    fissures.js       # One file per tracker
+    baro.js
+    ... (19 total)
+  services/           # External API clients
+    warframe-api.js   # DE worldstate
+    warframestat.js   # warframestat.us (items, drops)
+    market.js         # warframe.market (prices, orders)
+    cache.js          # SQLite caching layer
+  utils/
+    warframe-data.js  # Name lookups (items, nodes, factions)
+    embed-helpers.js  # Shared colors, formatting, progress bars
+    image-merge.js    # Sharp-based image compositing
+scripts/
+  setup.js            # One-command setup
+  update-data.js      # Download WFCD game data
+data/                 # Game data files (auto-updated)
 ```
-
-The bot will post embeds in your channels and update them every 60 seconds.
-
-To stop the bot, press `Ctrl+C`.
 
 ## Troubleshooting
 
 | Problem | Fix |
 |---|---|
-| `npm: command not found` | Node.js isn't installed. See Prerequisites. |
-| `git: command not found` | Git isn't installed. See Prerequisites. |
-| `Set DISCORD_TOKEN in .env` | You didn't paste your bot token into the `.env` file. |
-| `Missing Access` in the console | The bot can't see or send messages in that channel. Go to Server Settings > Roles > find the bot's role > enable View Channels, Send Messages, Embed Links, Read Message History. If the channel is private, you also need to add the bot's role in the channel permissions. |
-| Bot is online but no embeds appear | Make sure you put the correct channel ID in `.env` and restarted the bot. |
-| Embeds show codes like `SolNode51` | Run `npm run update-data` to refresh the game data files. |
+| `Set DISCORD_TOKEN in .env` | Paste your bot token in `.env` |
+| `Missing Access` | Bot needs View Channels, Send Messages, Embed Links, Read Message History, Attach Files |
+| Codes like `SolNode51` | Run `npm run update-data` |
+| Slash commands not appearing | Ensure `CLIENT_ID` and `GUILD_ID` are set, restart the bot |
+| No autocomplete suggestions | Wait for `[autocomplete] Ready` in console on startup |
 
-## Updating Game Data
-
-The `data/` folder contains node names, item names, and sortie data from the [WFCD](https://github.com/WFCD) community. If names look wrong after a Warframe update:
+## Scripts
 
 ```bash
-npm run update-data
+npm start              # Start the bot
+npm run dev            # Start with auto-reload on file changes
+npm run update-data    # Refresh game data from WFCD
+npm run register-commands  # Manually register slash commands
 ```
-
-## How It Works
-
-- Fetches world state directly from DE's official endpoint every 60 seconds
-- Parses the raw data into clean structures
-- Builds Discord embeds for each active tracker
-- Posts one message per tracker, then edits it each cycle — no message spam
-- Zero external API dependencies — talks directly to DE's servers
-
-## Project Structure
-
-```
-warframe-discord-bot/
-  .env.example       # Template for configuration
-  package.json       # Dependencies and scripts
-  data/              # WFCD game data (node names, items, sortie info)
-  scripts/
-    setup.js         # One-command setup
-    update-data.js   # Refresh game data files
-  src/
-    bot.js           # Discord client, update loop, message tracking
-    api.js           # Fetch and parse DE worldstate
-    embeds.js        # Build Discord embeds for each tracker
-    warframe-data.js # Name lookups (nodes, items, bosses, modifiers)
-```
-
-## Running as a Service
-
-By default the bot runs in your terminal and stops when you close it. To keep it running 24/7, set it up as a background service.
-
-### Windows — Task Scheduler
-
-1. Open **Task Scheduler** (search for it in the Start menu)
-2. Click **Create Basic Task** on the right side
-3. Name: `Warframe Tracker`, click Next
-4. Trigger: select **When the computer starts**, click Next
-5. Action: select **Start a program**, click Next
-6. Fill in:
-   - **Program/script**: the full path to node, e.g. `C:\Program Files\nodejs\node.exe` (run `where node` in a terminal to find it)
-   - **Add arguments**: `src\bot.js`
-   - **Start in**: the full path to the project folder, e.g. `C:\Users\YourName\warframe-discord-bot`
-7. Click Finish
-8. Find the task in the list, right-click it > **Properties**
-9. Check **Run whether user is logged on or not**
-10. On the **Settings** tab, check **If the task fails, restart every** and set it to `1 minute`
-11. Click OK
-
-### Linux — systemd
-
-Copy and paste this entire block into your terminal:
-
-```bash
-cat <<'EOF' | sudo tee /etc/systemd/system/warframe-tracker.service
-[Unit]
-Description=Warframe Discord Tracker
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/root/warframe-discord-bot
-ExecStart=/usr/bin/node src/bot.js
-Restart=always
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable warframe-tracker
-sudo systemctl start warframe-tracker
-sudo systemctl status warframe-tracker
-```
-
-If you cloned the project somewhere other than `/root/warframe-discord-bot`, change the `WorkingDirectory` path to match.
-
-### macOS — launchd
-
-Create the file `~/Library/LaunchAgents/com.warframe.tracker.plist`. **Replace `youruser` with your macOS username** (run `whoami` to check):
-
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>Label</key>
-    <string>com.warframe.tracker</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/usr/local/bin/node</string>
-        <string>src/bot.js</string>
-    </array>
-    <key>WorkingDirectory</key>
-    <string>/Users/youruser/warframe-discord-bot</string>
-    <key>RunAtLoad</key>
-    <true/>
-    <key>KeepAlive</key>
-    <true/>
-    <key>StandardOutPath</key>
-    <string>/tmp/warframe-tracker.log</string>
-    <key>StandardErrorPath</key>
-    <string>/tmp/warframe-tracker.err</string>
-</dict>
-</plist>
-```
-
-Load it:
-
-```bash
-launchctl load ~/Library/LaunchAgents/com.warframe.tracker.plist
-```
-
-To check logs: `cat /tmp/warframe-tracker.log`
 
 ## Requirements
 
-- **Runtime:** Node.js 18+ (uses native `fetch`, no HTTP library needed)
-- **npm dependency:** `discord.js` (the only package installed)
+- **Runtime:** Node.js 18+
+- **Dependencies:** discord.js, sharp, better-sqlite3
 
 ## License
 
