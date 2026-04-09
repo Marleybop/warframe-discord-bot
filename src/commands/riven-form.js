@@ -9,34 +9,23 @@ import { cached } from '../services/cache.js';
 const V1_URL = 'https://api.warframe.market/v1';
 const TTL_LIST = 6 * 60 * 60 * 1000;
 const TTL_SEARCH = 5 * 60 * 1000;
+const ALPHA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
-// In-memory riven items grouped by type
-let rivensByGroup = null;
+let allRivenItems = null;
 
 async function ensureRivenData() {
-  if (rivensByGroup) return;
-  const items = await cached('riven:items', TTL_LIST, async () => {
+  if (allRivenItems) return;
+  allRivenItems = await cached('riven:items', TTL_LIST, async () => {
     const res = await fetch(`${V1_URL}/riven/items`, { headers: { Platform: 'pc' } });
     if (!res.ok) throw new Error(`riven items ${res.status}`);
     const json = await res.json();
-    return json.payload.items;
+    return json.payload.items.sort((a, b) => a.item_name.localeCompare(b.item_name));
   });
-  rivensByGroup = {};
-  for (const item of items) {
-    const group = item.group || 'other';
-    if (!rivensByGroup[group]) rivensByGroup[group] = [];
-    rivensByGroup[group].push(item);
-  }
-  // Sort each group alphabetically
-  for (const group of Object.values(rivensByGroup)) {
-    group.sort((a, b) => a.item_name.localeCompare(b.item_name));
-  }
 }
 
-// Ensure data is warm
 ensureRivenData();
 
-// Track active searches per user (userId → { weapon, positive, negative })
+// Track active searches per user
 const activeSearches = new Map();
 
 // ── Post the persistent entry point ──
@@ -45,63 +34,68 @@ export async function postRivenForm(channel) {
     .setAuthor({ name: 'Riven Search' })
     .setDescription(
       'Search for rivens on warframe.market\n\n' +
-      '\u2022 Select a weapon category to start\n' +
-      '\u2022 Narrow down by weapon and stats\n' +
+      '\u2022 Pick a letter range to find your weapon\n' +
+      '\u2022 Filter by stats if you want\n' +
       '\u2022 Results are shown only to you'
     )
     .setColor(0x9B59B6);
 
+  // Split alphabet into ranges for the first selector
+  const ranges = [
+    { label: 'A – D', value: 'A-D' },
+    { label: 'E – H', value: 'E-H' },
+    { label: 'I – L', value: 'I-L' },
+    { label: 'M – P', value: 'M-P' },
+    { label: 'Q – T', value: 'Q-T' },
+    { label: 'U – Z', value: 'U-Z' },
+  ];
+
   const row = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
-      .setCustomId('riven_category')
-      .setPlaceholder('Select weapon type...')
-      .addOptions([
-        { label: 'Rifle / Primary', value: 'rifle', emoji: '\u{1F52B}' },
-        { label: 'Shotgun', value: 'shotgun', emoji: '\u{1F4A5}' },
-        { label: 'Pistol / Secondary', value: 'pistol', emoji: '\u{1F52B}' },
-        { label: 'Melee', value: 'melee', emoji: '\u2694\uFE0F' },
-        { label: 'Kitgun', value: 'kitgun', emoji: '\u{1F527}' },
-        { label: 'Zaw', value: 'zaw', emoji: '\u2694\uFE0F' },
-        { label: 'Archgun', value: 'archgun', emoji: '\u{1F680}' },
-      ])
+      .setCustomId('riven_alpha')
+      .setPlaceholder('Select letter range to find weapon...')
+      .addOptions(ranges)
   );
 
   await channel.send({ embeds: [embed], components: [row] });
 }
 
-// ── Step 1: Category selected → show weapon list ──
-export async function handleCategorySelect(interaction) {
+// ── Step 1: Letter range selected → show weapons in that range ──
+export async function handleAlphaSelect(interaction) {
   await ensureRivenData();
-  const category = interaction.values[0];
-  const weapons = rivensByGroup[category] || [];
+  const range = interaction.values[0]; // e.g. "A-D"
+  const [start, end] = range.split('-');
 
-  if (weapons.length === 0) {
+  const filtered = allRivenItems.filter(w => {
+    const first = w.item_name[0].toUpperCase();
+    return first >= start && first <= end;
+  });
+
+  if (filtered.length === 0) {
     return interaction.reply({
-      content: `No riven-eligible weapons found for **${category}**.`,
+      content: `No weapons found in range **${range}**.`,
       flags: MessageFlags.Ephemeral,
     });
   }
 
-  // Discord select menus max 25 options — if more, split alphabetically
-  const options = weapons.slice(0, 25).map(w => ({
+  // Discord max 25 options per select
+  const options = filtered.slice(0, 25).map(w => ({
     label: w.item_name,
     value: w.url_name,
   }));
 
-  // Store search state
-  activeSearches.set(interaction.user.id, { category });
+  const rows = [
+    new ActionRowBuilder().addComponents(
+      new StringSelectMenuBuilder()
+        .setCustomId('riven_weapon')
+        .setPlaceholder('Select weapon...')
+        .addOptions(options)
+    ),
+  ];
 
-  const row = new ActionRowBuilder().addComponents(
-    new StringSelectMenuBuilder()
-      .setCustomId('riven_weapon')
-      .setPlaceholder('Select weapon...')
-      .addOptions(options)
-  );
-
-  // If there are more than 25, add a second page
-  const rows = [row];
-  if (weapons.length > 25) {
-    const options2 = weapons.slice(25, 50).map(w => ({
+  // Second page if needed
+  if (filtered.length > 25) {
+    const options2 = filtered.slice(25, 50).map(w => ({
       label: w.item_name,
       value: w.url_name,
     }));
@@ -114,28 +108,25 @@ export async function handleCategorySelect(interaction) {
   }
 
   await interaction.reply({
-    content: `**${category.charAt(0).toUpperCase() + category.slice(1)}** — Select a weapon:`,
+    content: `**${range}** — Select a weapon:`,
     components: rows,
     flags: MessageFlags.Ephemeral,
   });
 }
 
-// ── Step 2: Weapon selected → show stat filter or search directly ──
+// ── Step 2: Weapon selected → offer search or filter ──
 export async function handleWeaponSelect(interaction) {
   await ensureRivenData();
   const weaponUrl = interaction.values[0];
-  const search = activeSearches.get(interaction.user.id) || {};
-  search.weaponUrl = weaponUrl;
+  const weapon = allRivenItems.find(w => w.url_name === weaponUrl);
 
-  // Find weapon name
-  for (const group of Object.values(rivensByGroup)) {
-    const found = group.find(w => w.url_name === weaponUrl);
-    if (found) { search.weaponName = found.item_name; search.thumb = found.thumb; break; }
-  }
-
+  const search = {
+    weaponUrl,
+    weaponName: weapon?.item_name || weaponUrl,
+    thumb: weapon?.thumb,
+  };
   activeSearches.set(interaction.user.id, search);
 
-  // Offer to filter by stat or search now
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('riven_search_now')
@@ -148,7 +139,7 @@ export async function handleWeaponSelect(interaction) {
   );
 
   await interaction.update({
-    content: `**${search.weaponName}** Riven — search now or add stat filters?`,
+    content: `**${search.weaponName}** Riven — search all or filter by stat?`,
     components: [row],
   });
 }
@@ -156,17 +147,29 @@ export async function handleWeaponSelect(interaction) {
 // ── Step 2b: Add stat filter ──
 export async function handleAddStat(interaction) {
   const attributes = await getRivenAttributes();
-  const common = attributes
-    .filter(a => !a.search_only)
-    .sort((a, b) => a.effect.localeCompare(b.effect))
-    .slice(0, 25)
-    .map(a => ({ label: a.effect, value: a.url_name }));
+
+  // Show the most popular/useful stats
+  const popular = [
+    'critical_chance', 'critical_damage', 'base_damage_/_melee_damage',
+    'multishot', 'damage', 'toxin_damage', 'heat_damage', 'cold_damage',
+    'electricity_damage', 'attack_speed', 'fire_rate_/_attack_speed',
+    'status_chance', 'status_duration', 'punch_through',
+    'reload_speed', 'magazine_capacity', 'range',
+  ];
+
+  const options = popular
+    .map(url => {
+      const attr = attributes.find(a => a.url_name === url);
+      return attr ? { label: attr.effect, value: attr.url_name } : null;
+    })
+    .filter(Boolean)
+    .slice(0, 25);
 
   const row = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
       .setCustomId('riven_stat_positive')
-      .setPlaceholder('Desired positive stat...')
-      .addOptions(common)
+      .setPlaceholder('Select desired positive stat...')
+      .addOptions(options)
   );
 
   await interaction.update({
@@ -180,8 +183,6 @@ export async function handleStatSelect(interaction) {
   const search = activeSearches.get(interaction.user.id) || {};
   search.positive = interaction.values[0];
   activeSearches.set(interaction.user.id, search);
-
-  // Go straight to search
   return doSearch(interaction, search);
 }
 
@@ -223,7 +224,7 @@ async function doSearch(interaction, search) {
 
   const embed = new EmbedBuilder()
     .setAuthor({ name: 'Riven Search Results' })
-    .setTitle(`${search.weaponName || search.weaponUrl} Riven`)
+    .setTitle(`${search.weaponName} Riven`)
     .setColor(0x9B59B6);
 
   if (search.thumb) embed.setThumbnail(assetUrl(search.thumb));
@@ -258,14 +259,11 @@ async function doSearch(interaction, search) {
       desc = `Filter: +${attr?.effect || search.positive}\n${desc}`;
     }
     desc += lines.join('\n\n');
-
     embed.setDescription(desc);
   }
 
-  // Clean up
   activeSearches.delete(interaction.user.id);
 
-  // Add a "Search Again" button
   const row = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setCustomId('riven_restart')
@@ -276,25 +274,26 @@ async function doSearch(interaction, search) {
   await interaction.editReply({ content: '', embeds: [embed], components: [row] });
 }
 
-// ── Restart → show category selection again ──
+// ── Restart ──
 export async function handleRestart(interaction) {
+  const ranges = [
+    { label: 'A – D', value: 'A-D' },
+    { label: 'E – H', value: 'E-H' },
+    { label: 'I – L', value: 'I-L' },
+    { label: 'M – P', value: 'M-P' },
+    { label: 'Q – T', value: 'Q-T' },
+    { label: 'U – Z', value: 'U-Z' },
+  ];
+
   const row = new ActionRowBuilder().addComponents(
     new StringSelectMenuBuilder()
-      .setCustomId('riven_category')
-      .setPlaceholder('Select weapon type...')
-      .addOptions([
-        { label: 'Rifle / Primary', value: 'rifle', emoji: '\u{1F52B}' },
-        { label: 'Shotgun', value: 'shotgun', emoji: '\u{1F4A5}' },
-        { label: 'Pistol / Secondary', value: 'pistol', emoji: '\u{1F52B}' },
-        { label: 'Melee', value: 'melee', emoji: '\u2694\uFE0F' },
-        { label: 'Kitgun', value: 'kitgun', emoji: '\u{1F527}' },
-        { label: 'Zaw', value: 'zaw', emoji: '\u2694\uFE0F' },
-        { label: 'Archgun', value: 'archgun', emoji: '\u{1F680}' },
-      ])
+      .setCustomId('riven_alpha')
+      .setPlaceholder('Select letter range to find weapon...')
+      .addOptions(ranges)
   );
 
   await interaction.update({
-    content: 'Select a weapon type:',
+    content: 'Select a letter range to find your weapon:',
     embeds: [],
     components: [row],
   });
