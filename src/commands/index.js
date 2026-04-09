@@ -10,11 +10,7 @@ import { weapon } from './weapon.js';
 import { mod } from './mod.js';
 import { ducats } from './ducats.js';
 import { riven } from './riven.js';
-import {
-  postRivenForm, handleCategorySelect, handleWeaponSelect,
-  handleAddStat, handleStatSelect, handleSearchNow, handleRestart,
-  handlePageNext, handlePagePrev,
-} from './riven-form.js';
+import { postRivenForm, handleRivenOpen, handleRivenSubmit } from './riven-form.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 export { postRivenForm } from './riven-form.js';
@@ -34,23 +30,6 @@ commands.set('setup-riven', async (interaction) => {
   await interaction.reply({ content: 'Riven search form posted!', flags: MessageFlags.Ephemeral });
 });
 
-// Button handlers
-const buttons = {
-  riven_search_now: handleSearchNow,
-  riven_add_stat: handleAddStat,
-  riven_restart: handleRestart,
-  riven_page_next: handlePageNext,
-  riven_page_prev: handlePagePrev,
-};
-
-// Select menu handlers
-const selects = {
-  riven_category: handleCategorySelect,
-  riven_weapon: handleWeaponSelect,
-  riven_weapon_2: handleWeaponSelect,
-  riven_stat_positive: handleStatSelect,
-};
-
 export async function handleInteraction(interaction) {
   // Autocomplete
   if (interaction.isAutocomplete()) {
@@ -64,21 +43,19 @@ export async function handleInteraction(interaction) {
 
   // Button clicks
   if (interaction.isButton()) {
-    const handler = buttons[interaction.customId];
-    if (handler) {
-      try { await handler(interaction); } catch (err) {
-        console.error(`[button:${interaction.customId}] Error:`, err.message);
+    if (interaction.customId === 'riven_open') {
+      try { await handleRivenOpen(interaction); } catch (err) {
+        console.error('[button:riven_open] Error:', err.message);
       }
     }
     return;
   }
 
-  // Select menus
-  if (interaction.isStringSelectMenu()) {
-    const handler = selects[interaction.customId];
-    if (handler) {
-      try { await handler(interaction); } catch (err) {
-        console.error(`[select:${interaction.customId}] Error:`, err.message);
+  // Modal submissions
+  if (interaction.isModalSubmit()) {
+    if (interaction.customId === 'riven_submit') {
+      try { await handleRivenSubmit(interaction); } catch (err) {
+        console.error('[modal:riven_submit] Error:', err.message);
       }
     }
     return;
