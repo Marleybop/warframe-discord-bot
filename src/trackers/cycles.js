@@ -1,7 +1,18 @@
 import { EmbedBuilder } from 'discord.js';
 import { emptyEmbed, formatDuration, COLORS } from '../utils/embed-helpers.js';
+import { cached } from '../services/cache.js';
 
 export const key = 'cycles';
+
+const TTL = 60 * 1000; // 1 minute, matches refresh interval
+
+async function fetchCycle(endpoint) {
+  return cached(`tracker:${endpoint}`, TTL, async () => {
+    const res = await fetch(`https://api.warframestat.us/pc/${endpoint}/`);
+    if (!res.ok) throw new Error(`${endpoint} ${res.status}`);
+    return res.json();
+  });
+}
 
 export function extract(ws) {
   const time = ws.Time;
@@ -30,7 +41,15 @@ export function extract(ws) {
   };
 }
 
-export function build(cycles) {
+const DUVIRI_MOODS = {
+  joy: '\u{1F60A} Joy',
+  anger: '\u{1F621} Anger',
+  envy: '\u{1F7E2} Envy',
+  sorrow: '\u{1F622} Sorrow',
+  fear: '\u{1F630} Fear',
+};
+
+export async function build(cycles) {
   if (!cycles) {
     return emptyEmbed('World Cycles', 'Cycle data unavailable.');
   }
@@ -40,13 +59,34 @@ export function build(cycles) {
   const vallis = cycles.vallis.isWarm ? '\u{1F525} Warm' : '\u2744\uFE0F Cold';
   const cambion = cycles.cambion.isFass ? '\u2600\uFE0F Fass' : '\u{1F319} Vome';
 
+  let desc =
+    `**Earth** ${earth} \u2022 ${formatDuration(cycles.earth.remaining)}\n` +
+    `**Cetus** ${cetus} \u2022 ${formatDuration(cycles.cetus.remaining)}\n` +
+    `**Orb Vallis** ${vallis} \u2022 ${formatDuration(cycles.vallis.remaining)}\n` +
+    `**Cambion Drift** ${cambion} \u2022 ${formatDuration(cycles.cambion.remaining)}`;
+
+  // Fetch Zariman and Duviri cycles from warframestat.us
+  try {
+    const zariman = await fetchCycle('zarimanCycle');
+    if (zariman && zariman.state) {
+      const state = zariman.isCorpus ? '\u{1F535} Corpus' : '\u{1F534} Grineer';
+      const timeLeft = zariman.timeLeft || '';
+      desc += `\n**Zariman** ${state}${timeLeft ? ` \u2022 ${timeLeft}` : ''}`;
+    }
+  } catch { /* optional */ }
+
+  try {
+    const duviri = await fetchCycle('duviriCycle');
+    if (duviri && duviri.state) {
+      const mood = DUVIRI_MOODS[duviri.state] || duviri.state;
+      const expiry = duviri.expiry ? new Date(duviri.expiry) : null;
+      const remaining = expiry ? formatDuration(Math.max(0, (expiry - Date.now()) / 1000)) : '';
+      desc += `\n**Duviri** ${mood}${remaining ? ` \u2022 ${remaining}` : ''}`;
+    }
+  } catch { /* optional */ }
+
   return new EmbedBuilder()
     .setAuthor({ name: 'World Cycles' })
-    .setDescription(
-      `**Earth** ${earth} \u2022 ${formatDuration(cycles.earth.remaining)}\n` +
-      `**Cetus** ${cetus} \u2022 ${formatDuration(cycles.cetus.remaining)}\n` +
-      `**Orb Vallis** ${vallis} \u2022 ${formatDuration(cycles.vallis.remaining)}\n` +
-      `**Cambion Drift** ${cambion} \u2022 ${formatDuration(cycles.cambion.remaining)}`
-    )
+    .setDescription(desc)
     .setColor(COLORS.CYCLES);
 }
