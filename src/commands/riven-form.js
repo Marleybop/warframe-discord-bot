@@ -113,18 +113,23 @@ export async function handleRivenSubmit(interaction) {
     return interaction.editReply({ content: `**${weaponQuery}** is not a riven-eligible weapon.` });
   }
 
-  // Resolve stat names
+  // Resolve stat names — supports comma-separated values
   const attributes = await getRivenAttributes();
   const resolveStat = (input) => {
     if (!input) return null;
-    const l = input.toLowerCase();
+    const l = input.toLowerCase().trim();
     return (attributes.find(a => a.url_name === l)
       || attributes.find(a => a.effect?.toLowerCase() === l)
       || attributes.find(a => a.effect?.toLowerCase().includes(l)))?.url_name || null;
   };
 
-  const positiveUrl = resolveStat(positiveQuery);
-  const negativeUrl = resolveStat(negativeQuery);
+  const resolveMultiple = (input) => {
+    if (!input) return [];
+    return input.split(',').map(s => resolveStat(s.trim())).filter(Boolean);
+  };
+
+  const positiveUrls = resolveMultiple(positiveQuery);
+  const negativeUrls = resolveMultiple(negativeQuery);
 
   // Search auctions
   const params = new URLSearchParams({
@@ -133,8 +138,8 @@ export async function handleRivenSubmit(interaction) {
     sort_by: 'price_asc',
     buyout_policy: 'with',
   });
-  if (positiveUrl) params.append('positive_stats', positiveUrl);
-  if (negativeUrl) params.append('negative_stats', negativeUrl);
+  for (const stat of positiveUrls) params.append('positive_stats', stat);
+  for (const stat of negativeUrls) params.append('negative_stats', stat);
 
   let auctions;
   try {
