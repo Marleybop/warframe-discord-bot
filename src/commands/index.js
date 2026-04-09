@@ -8,6 +8,7 @@ import { warframe } from './warframe.js';
 import { weapon } from './weapon.js';
 import { mod } from './mod.js';
 import { ducats } from './ducats.js';
+import { riven } from './riven.js';
 import { handleAutocomplete } from './autocomplete.js';
 export { commandDefinitions } from './definitions.js';
 
@@ -20,6 +21,7 @@ commands.set('warframe', warframe);
 commands.set('weapon', weapon);
 commands.set('mod', mod);
 commands.set('ducats', ducats);
+commands.set('riven', riven);
 
 export async function handleInteraction(interaction) {
   if (interaction.isAutocomplete()) {

@@ -8,6 +8,7 @@ const TTL = 6 * 60 * 60 * 1000; // 6 hours
 let marketItems = null;
 let relicNames = null;
 let primePartNames = null;
+let rivenWeaponNames = null;
 let warframeNames = null;
 let weaponNames = null;
 let modNames = null;
@@ -50,12 +51,20 @@ async function ensureItems() {
       .filter(i => i.i18n?.en?.name && i.ducats && i.ducats > 0 && i.tags?.includes('prime'))
       .map(i => ({ name: i.i18n.en.name.slice(0, 100), value: i.i18n.en.name.slice(0, 100) }));
 
+    // Load riven-eligible weapons from warframe.market
+    rivenWeaponNames = await cached('autocomplete:rivens', TTL, async () => {
+      const res = await fetch('https://api.warframe.market/v1/riven/items', { headers: { Platform: 'pc' } });
+      if (!res.ok) throw new Error(`riven items ${res.status}`);
+      const json = await res.json();
+      return json.payload.items.map(i => ({ name: i.item_name.slice(0, 100), value: i.item_name.slice(0, 100) }));
+    });
+
     // Load warframestat.us lists for /warframe, /weapon, /mod (has ALL items, not just tradeable)
     warframeNames = await cached('autocomplete:warframes', TTL, () => fetchNameList('warframes'));
     weaponNames = await cached('autocomplete:weapons', TTL, () => fetchNameList('weapons'));
     modNames = await cached('autocomplete:mods', TTL, () => fetchNameList('mods'));
 
-    console.log(`[autocomplete] Ready: ${marketItems.length} market items, ${warframeNames.length} warframes, ${weaponNames.length} weapons, ${modNames.length} mods, ${relicNames.length} relics`);
+    console.log(`[autocomplete] Ready: ${marketItems.length} market, ${warframeNames.length} warframes, ${weaponNames.length} weapons, ${modNames.length} mods, ${relicNames.length} relics, ${rivenWeaponNames.length} riven weapons`);
   } catch (err) {
     console.error('[autocomplete] Failed to load items:', err.message);
   }
@@ -87,6 +96,7 @@ const COMMAND_LISTS = {
   weapon: () => weaponNames || [],
   mod: () => modNames || [],
   ducats: () => primePartNames || [],
+  riven: () => rivenWeaponNames || [],
 };
 
 export async function handleAutocomplete(interaction) {

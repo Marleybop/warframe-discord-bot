@@ -88,4 +88,14 @@ export const commandDefinitions = [
         .setRequired(false)
         .setAutocomplete(true)
     ),
+
+  new SlashCommandBuilder()
+    .setName('riven')
+    .setDescription('Search riven auctions for a weapon')
+    .addStringOption(opt =>
+      opt.setName('weapon')
+        .setDescription('Weapon name (e.g. "Braton")')
+        .setRequired(true)
+        .setAutocomplete(true)
+    ),
 ].map(cmd => cmd.toJSON());
