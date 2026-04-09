@@ -4,9 +4,9 @@ import { getItemImageUrl } from '../utils/warframe-data.js';
 import { COLORS } from '../utils/embed-helpers.js';
 
 const RARITY_EMOJI = {
-  Common: '\u{1F7E4}',    // brown
-  Uncommon: '\u{1F7E0}',  // silver/white → using orange
-  Rare: '\u{1F7E1}',      // gold
+  Common: '\u{1F7E4}',
+  Uncommon: '\u26AA',
+  Rare: '\u{1F7E1}',
 };
 
 const TIER_COLORS = {
@@ -47,16 +47,24 @@ export async function relic(interaction) {
     });
   }
 
-  // Pick the best match
+  // Prefer the Intact version (base relic without refinement)
   const lower = query.toLowerCase();
-  const relic = relics.find(r => r.name?.toLowerCase().includes(lower)) || relics[0];
+  const intact = relics.find(r => {
+    const n = r.name?.toLowerCase() || '';
+    return n.includes(lower.replace(' relic', '').trim()) &&
+      !n.includes('exceptional') && !n.includes('flawless') && !n.includes('radiant');
+  });
+  const relic = intact || relics[0];
 
   const rewards = relic.rewards || [];
   const vaulted = relic.vaulted;
   const tier = relic.name?.split(' ')[0]?.toLowerCase();
   const color = TIER_COLORS[tier] || 0x4A90D9;
 
-  // Group rewards by rarity
+  // Clean relic name — remove "Intact" suffix if present
+  let relicName = relic.name || query;
+  relicName = relicName.replace(/\s*Intact$/i, '').replace(/\s*Relic$/i, '') + ' Relic';
+
   const common = rewards.filter(r => r.rarity === 'Common');
   const uncommon = rewards.filter(r => r.rarity === 'Uncommon');
   const rare = rewards.filter(r => r.rarity === 'Rare');
@@ -64,7 +72,7 @@ export async function relic(interaction) {
   const formatReward = (r) => {
     const emoji = RARITY_EMOJI[r.rarity] || '';
     const name = r.item?.name || r.itemName || 'Unknown';
-    const chance = r.chance ? ` \u2022 ${r.chance.toFixed(0)}%` : '';
+    const chance = r.chance != null ? ` \u2022 ${Number(r.chance).toFixed(1)}%` : '';
     return `${emoji} ${name}${chance}`;
   };
 
@@ -82,11 +90,10 @@ export async function relic(interaction) {
   if (!desc) desc = 'No reward data available.';
 
   const embed = new EmbedBuilder()
-    .setTitle(`${relic.name}${vaulted ? ' (Vaulted)' : ''}`)
+    .setTitle(`${relicName}${vaulted ? ' (Vaulted)' : ''}`)
     .setDescription(desc)
     .setColor(color);
 
-  // Try to get the relic image
   const img = getItemImageUrl(relic.uniqueName);
   if (img) embed.setThumbnail(img);
 

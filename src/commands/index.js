@@ -12,6 +12,7 @@ commands.set('relic', relic);
 
 export async function handleInteraction(interaction) {
   if (interaction.isAutocomplete()) {
+    console.log(`[autocomplete] Received for /${interaction.commandName}`);
     try {
       await handleAutocomplete(interaction);
     } catch (err) {
