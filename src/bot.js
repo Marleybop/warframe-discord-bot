@@ -1,8 +1,8 @@
-import { Client, GatewayIntentBits } from 'discord.js';
+import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from 'discord.js';
 import { TOKEN, INTERVAL, CHANNELS } from './config.js';
 import { fetchWorldState } from './services/warframe-api.js';
 import { trackers } from './trackers/index.js';
-import { handleInteraction } from './commands/index.js';
+import { handleInteraction, commandDefinitions } from './commands/index.js';
 
 if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
   console.error('Set DISCORD_TOKEN in .env');
@@ -83,11 +83,47 @@ async function updateTrackers() {
   console.log(`[Update] ${new Date().toLocaleTimeString()} | ${active.join(', ')}`);
 }
 
+// Auto-register slash commands on startup
+async function registerCommands() {
+  const clientId = process.env.CLIENT_ID;
+  if (!clientId) {
+    console.warn('[Commands] CLIENT_ID not set, skipping command registration');
+    return;
+  }
+
+  try {
+    const rest = new REST().setToken(TOKEN);
+    await rest.put(Routes.applicationCommands(clientId), { body: commandDefinitions });
+    console.log(`[Commands] Registered ${commandDefinitions.length} slash commands`);
+  } catch (err) {
+    console.error('[Commands] Registration failed:', err.message);
+  }
+}
+
+// Schedule WFCD data updates (every 24h)
+function scheduleDataUpdates() {
+  const DAY = 24 * 60 * 60 * 1000;
+  setInterval(async () => {
+    console.log('[Data] Running scheduled data update...');
+    try {
+      // Dynamic import so it runs as a fresh script
+      const { execSync } = await import('child_process');
+      execSync('node scripts/update-data.js', { stdio: 'inherit' });
+    } catch (err) {
+      console.error('[Data] Scheduled update failed:', err.message);
+    }
+  }, DAY);
+  console.log(`[Data] Next auto-update in 24h`);
+}
+
 // Handle slash command interactions
 client.on('interactionCreate', handleInteraction);
 
 client.once('clientReady', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  // Register slash commands
+  await registerCommands();
 
   const active = trackers.filter(t => CHANNELS[t.key]);
   if (active.length === 0) {
@@ -99,6 +135,7 @@ client.once('clientReady', async () => {
 
   await updateTrackers();
   setInterval(updateTrackers, INTERVAL);
+  scheduleDataUpdates();
 });
 
 client.login(TOKEN);

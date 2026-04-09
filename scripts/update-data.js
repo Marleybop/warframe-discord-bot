@@ -29,7 +29,7 @@ const FILES = [
 
 // WFCD item categories to download for image lookups
 const ITEM_CATEGORIES = [
-  'Mods', 'Weapons', 'Warframes', 'Sentinels', 'Pets',
+  'Mods', 'Warframes', 'Sentinels', 'Pets',
   'Archwing', 'Melee', 'Primary', 'Secondary', 'Misc',
   'Resources', 'Skins', 'Arcanes', 'Relics',
 ];

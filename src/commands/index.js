@@ -5,6 +5,7 @@ import { where } from './where.js';
 import { relic } from './relic.js';
 import { vaulted } from './vaulted.js';
 import { handleAutocomplete } from './autocomplete.js';
+export { commandDefinitions } from './definitions.js';
 
 const commands = new Map();
 commands.set('price', price);
