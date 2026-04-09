@@ -157,9 +157,28 @@ export async function handleRivenSubmit(interaction) {
     return interaction.editReply({ content: 'Failed to search auctions. Try again.' });
   }
 
-  // Filter
+  // Filter — API only filters by first stat, enforce all locally
   let filtered = (auctions || []).filter(a => a.buyout_price && !a.closed);
   if (maxPrice && !isNaN(maxPrice)) filtered = filtered.filter(a => a.buyout_price <= maxPrice);
+
+  // Ensure all requested positive stats are present as positives
+  if (positiveUrls.length > 0) {
+    filtered = filtered.filter(a => {
+      const attrs = a.item?.attributes || [];
+      return positiveUrls.every(stat =>
+        attrs.some(attr => attr.url_name === stat && attr.positive)
+      );
+    });
+  }
+  // Ensure requested negative stats are present as negatives
+  if (negativeUrls.length > 0) {
+    filtered = filtered.filter(a => {
+      const attrs = a.item?.attributes || [];
+      return negativeUrls.every(stat =>
+        attrs.some(attr => attr.url_name === stat && !attr.positive)
+      );
+    });
+  }
 
   // Build result
   const embed = new EmbedBuilder()
