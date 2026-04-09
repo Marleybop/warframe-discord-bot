@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import { getItemList, getStatistics, assetUrl } from '../services/market.js';
+import { getItemList, assetUrl } from '../services/market.js';
 
 export async function ducats(interaction) {
   await interaction.deferReply();
@@ -15,26 +15,25 @@ export async function ducats(interaction) {
     });
   }
 
-  // If no query, show best ducat/plat ratio items
+  // Only Prime parts have ducat values
+  const primeItems = items.filter(i =>
+    i.ducats && i.ducats > 0 && i.i18n?.en?.name
+    && i.tags?.includes('prime')
+  );
+
+  // If no query, show top ducat value items
   if (!query) {
-    const ducatItems = items
-      .filter(i => i.ducats && i.ducats > 0 && i.i18n?.en?.name)
-      .map(i => ({
-        name: i.i18n.en.name,
-        ducats: i.ducats,
-        slug: i.slug,
-      }))
+    const sorted = primeItems
+      .map(i => ({ name: i.i18n.en.name, ducats: i.ducats }))
       .sort((a, b) => b.ducats - a.ducats)
       .slice(0, 20);
 
-    const lines = ducatItems.map(i =>
-      `**${i.name}** \u2022 ${i.ducats} ducats`
-    );
+    const lines = sorted.map(i => `**${i.name}** \u2022 ${i.ducats} ducats`);
 
     return interaction.editReply({
       embeds: [new EmbedBuilder()
         .setAuthor({ name: 'Ducat Values' })
-        .setTitle('Top 20 by Ducat Value')
+        .setTitle('Top 20 Prime Parts by Ducat Value')
         .setDescription(lines.join('\n'))
         .setColor(0xDAA520)],
     });
@@ -42,45 +41,24 @@ export async function ducats(interaction) {
 
   // Search for specific item
   const lower = query.toLowerCase();
-  const match = items.find(i => i.i18n?.en?.name?.toLowerCase() === lower)
-    || items.find(i => i.i18n?.en?.name?.toLowerCase().startsWith(lower))
-    || items.find(i => i.i18n?.en?.name?.toLowerCase().includes(lower));
+  const match = primeItems.find(i => i.i18n.en.name.toLowerCase() === lower)
+    || primeItems.find(i => i.i18n.en.name.toLowerCase().startsWith(lower))
+    || primeItems.find(i => i.i18n.en.name.toLowerCase().includes(lower));
 
   if (!match) {
     return interaction.editReply({
       embeds: [new EmbedBuilder()
-        .setDescription(`No item found for **${query}**`)
-        .setColor(0xFF0000)],
-    });
-  }
-
-  const name = match.i18n?.en?.name || match.slug;
-  const ducatVal = match.ducats;
-
-  if (!ducatVal) {
-    return interaction.editReply({
-      embeds: [new EmbedBuilder()
-        .setDescription(`**${name}** has no ducat value (not a Prime part).`)
+        .setDescription(`**${query}** is not a Prime part or has no ducat value.`)
         .setColor(0x808080)],
     });
   }
 
-  // Try to get market price for ducat/plat ratio
-  let priceInfo = '';
-  try {
-    const stats = await getStatistics(match.slug);
-    const recent = stats.statistics_closed?.['48hours'];
-    const last = recent?.[recent.length - 1];
-    if (last?.median) {
-      const ratio = (ducatVal / last.median).toFixed(1);
-      priceInfo = `\nMarket Price: **${last.median}p** \u2022 Ratio: **${ratio} ducats/p**`;
-    }
-  } catch { /* optional */ }
+  const name = match.i18n.en.name;
 
   const embed = new EmbedBuilder()
     .setAuthor({ name: 'Ducat Value' })
     .setTitle(name)
-    .setDescription(`**${ducatVal}** ducats${priceInfo}`)
+    .setDescription(`**${match.ducats}** ducats`)
     .setColor(0xDAA520);
 
   const thumb = match.i18n?.en?.thumb;
