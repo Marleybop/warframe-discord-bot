@@ -11,7 +11,8 @@
     "start": "node src/bot.js",
     "dev": "node --watch src/bot.js",
     "setup": "node scripts/setup.js",
-    "update-data": "node scripts/update-data.js"
+    "update-data": "node scripts/update-data.js",
+    "register-commands": "node src/commands/register.js"
   },
   "keywords": [
     "warframe",

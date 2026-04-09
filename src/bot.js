@@ -2,6 +2,7 @@ import { Client, GatewayIntentBits } from 'discord.js';
 import { TOKEN, INTERVAL, CHANNELS } from './config.js';
 import { fetchWorldState } from './services/warframe-api.js';
 import { trackers } from './trackers/index.js';
+import { handleInteraction } from './commands/index.js';
 
 if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
   console.error('Set DISCORD_TOKEN in .env');
@@ -81,6 +82,9 @@ async function updateTrackers() {
   const active = trackers.filter(t => CHANNELS[t.key]).map(t => t.key);
   console.log(`[Update] ${new Date().toLocaleTimeString()} | ${active.join(', ')}`);
 }
+
+// Handle slash command interactions
+client.on('interactionCreate', handleInteraction);
 
 client.once('clientReady', async () => {
   console.log(`Logged in as ${client.user.tag}`);
