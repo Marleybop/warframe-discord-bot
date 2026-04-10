@@ -10,9 +10,9 @@ const WIKI = 'https://wiki.warframe.com/images';
 // Custom emojis: name → full URL (only uploaded if enabled)
 export const CUSTOM_EMOJI_SOURCES = {
   // Factions
-  wf_grineer:      `${CDN_BASE}/grineer-28ab696df7.png`,
-  wf_corpus:       `${CDN_BASE}/corpus-ship-bridge-scene-a38a31ea71.png`,
-  wf_infested:     `${CDN_BASE}/infested-150f6a85cc.png`,
+  wf_grineer:      `${WIKI}/Grineer.png`,
+  wf_corpus:       `${WIKI}/Corpus.png`,
+  wf_infested:     `${WIKI}/Infested.png`,
 
   // Relics
   wf_lith:         `${CDN_BASE}/lith-intact.png`,

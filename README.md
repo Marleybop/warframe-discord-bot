@@ -4,13 +4,13 @@ Discord bot that tracks Warframe world state with live-updating embeds and inter
 
 ## Features
 
-### Live Trackers (19 channels)
+### Live Trackers (20 channels)
 
 Each tracker owns a single message and edits it every 60 seconds — no spam, just a constantly-refreshing dashboard. News posts new articles as they appear.
 
 | Category | Trackers |
 |---|---|
-| **Missions** | Void Fissures, Void Storms, Sortie, Archon Hunt |
+| **Missions** | Void Fissures, Void Storms, Sortie, Archon Hunt, Arbitration |
 | **Traders** | Baro Ki'Teer, Varzia (Prime Resurgence), Darvo's Deal |
 | **World** | World Cycles (Earth, Cetus, Vallis, Cambion, Zariman, Duviri), Invasions, Alerts, Events, News |
 | **Endgame** | Nightwave, Steel Path, Deep Archimedea, The Circuit |
@@ -133,6 +133,7 @@ FOMORIAN_CHANNEL_ID=
 STEELPATH_CHANNEL_ID=
 NEWS_CHANNEL_ID=
 CALENDAR_CHANNEL_ID=
+ARBITRATION_CHANNEL_ID=
 BOT_COMMANDS_CHANNEL_ID=
 ```
 

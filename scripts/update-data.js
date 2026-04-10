@@ -94,4 +94,18 @@ const vaultKb = Math.round(vaultedJson.length / 1024);
 const vaultCount = Object.values(vaultedItems).reduce((sum, arr) => sum + arr.length, 0);
 console.log(`  vaulted.json (${vaultKb}KB) - ${vaultCount} vaulted items`);
 
+// Download arbitration schedule (precomputed hourly rotation from browse.wf)
+console.log('\nDownloading arbitration schedule...');
+try {
+  const res = await fetch('https://browse.wf/arbys.txt');
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const text = await res.text();
+  writeFileSync(resolve(dataDir, 'arbitrations.txt'), text);
+  const lines = text.trim().split('\n').length;
+  const kb = Math.round(text.length / 1024);
+  console.log(`  arbitrations.txt (${kb}KB) - ${lines} hourly entries`);
+} catch (err) {
+  console.error(`  arbitrations.txt FAILED: ${err.message}`);
+}
+
 console.log('\nDone! Data files are up to date.');
