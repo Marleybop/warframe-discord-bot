@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { assetUrl } from '../services/market.js';
+import { e } from '../utils/emojis.js';
 import { cached } from '../services/cache.js';
 
 const V1_URL = 'https://api.warframe.market/v1';
@@ -122,7 +123,7 @@ export async function riven(interaction) {
   const filters = [];
   if (positiveStat) filters.push(`+${positiveStat}`);
   if (negativeStat) filters.push(`-${negativeStat}`);
-  if (maxPrice) filters.push(`\u2264${maxPrice}p`);
+  if (maxPrice) filters.push(`\u2264${maxPrice}${e('platinum')}`);
   if (maxRolls != null) filters.push(`\u2264${maxRolls} rolls`);
   const filterStr = filters.length > 0 ? `Filters: ${filters.join(' \u2022 ')}\n` : '';
 
@@ -145,13 +146,13 @@ export async function riven(interaction) {
     const seller = a.owner?.ingame_name || '?';
     const status = a.owner?.status === 'ingame' ? ' \u{1F7E2}' : '';
 
-    return `**${a.buyout_price}p**${meta ? ` \u2022 ${meta}` : ''}\n\u2003${stats}\n\u2003Seller: ${seller}${status}`;
+    return `**${a.buyout_price}${e('platinum')}**${meta ? ` \u2022 ${meta}` : ''}\n\u2003${stats}\n\u2003Seller: ${seller}${status}`;
   });
 
   const prices = top.map(a => a.buyout_price);
   const low = Math.min(...prices);
   const high = Math.max(...prices);
-  const summary = low === high ? `**${low}p**` : `**${low}p** \u2013 **${high}p**`;
+  const summary = low === high ? `**${low}${e('platinum')}**` : `**${low}p** \u2013 **${high}${e('platinum')}**`;
 
   embed.setDescription(
     `${filterStr}${filtered.length} listings \u2022 Buyouts from ${summary}\n\n` +

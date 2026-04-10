@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getItemList, getStatistics, assetUrl } from '../services/market.js';
+import { e } from '../utils/emojis.js';
 
 function fuzzyMatch(items, query) {
   const lower = query.toLowerCase();
@@ -7,6 +8,8 @@ function fuzzyMatch(items, query) {
     || items.find(i => i.i18n?.en?.name?.toLowerCase().startsWith(lower))
     || items.find(i => i.i18n?.en?.name?.toLowerCase().includes(lower));
 }
+
+const P = () => e('platinum');
 
 function formatStats(stats) {
   const closed48 = stats.statistics_closed?.['48hours'] || [];
@@ -17,13 +20,13 @@ function formatStats(stats) {
   let desc = '';
   if (recent) {
     desc += '**Last 48 Hours**\n';
-    desc += `Median: **${recent.median}p** \u2022 Avg: **${Math.round(recent.avg_price)}p**\n`;
-    desc += `Range: ${recent.min_price}p \u2013 ${recent.max_price}p \u2022 Vol: ${recent.volume}\n`;
+    desc += `Median: **${recent.median}${P()}** \u2022 Avg: **${Math.round(recent.avg_price)}${P()}**\n`;
+    desc += `Range: ${recent.min_price}${P()} \u2013 ${recent.max_price}${P()} \u2022 Vol: ${recent.volume}\n`;
   }
   if (longTerm) {
     desc += '\n**Last 90 Days**\n';
-    desc += `Median: **${longTerm.median}p** \u2022 Avg: **${Math.round(longTerm.avg_price)}p**\n`;
-    desc += `Range: ${longTerm.min_price}p \u2013 ${longTerm.max_price}p \u2022 Vol: ${longTerm.volume}\n`;
+    desc += `Median: **${longTerm.median}${P()}** \u2022 Avg: **${Math.round(longTerm.avg_price)}${P()}**\n`;
+    desc += `Range: ${longTerm.min_price}${P()} \u2013 ${longTerm.max_price}${P()} \u2022 Vol: ${longTerm.volume}\n`;
   }
   return { desc, median48: recent?.median, median90: longTerm?.median };
 }
@@ -83,7 +86,7 @@ export async function price(interaction) {
     const validParts = partPrices.filter(p => p && p.median);
     if (validParts.length > 0) {
       desc += '\n__Individual Parts__\n';
-      desc += validParts.map(p => `${p.name} \u2022 **${p.median}p**`).join('\n');
+      desc += validParts.map(p => `${p.name} \u2022 **${p.median}${P()}**`).join('\n');
     }
   } else if (isSet) {
     // setParts not available, try finding parts by name
@@ -111,7 +114,7 @@ export async function price(interaction) {
       const validParts = partPrices.filter(p => p && p.median);
       if (validParts.length > 0) {
         desc += '\n__Individual Parts__\n';
-        desc += validParts.map(p => `${p.name} \u2022 **${p.median}p**`).join('\n');
+        desc += validParts.map(p => `${p.name} \u2022 **${p.median}${P()}**`).join('\n');
       }
     }
   }

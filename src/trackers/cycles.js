@@ -1,17 +1,11 @@
 import { EmbedBuilder } from 'discord.js';
 import { emptyEmbed, formatDuration, COLORS } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 
 export const key = 'cycles';
 
 // Duviri mood rotation: 7200s (2h) per mood, 5 moods = 36000s full cycle
 const DUVIRI_MOODS = ['Sorrow', 'Fear', 'Joy', 'Anger', 'Envy'];
-const DUVIRI_MOOD_EMOJI = {
-  Sorrow: '\u{1F622}',
-  Fear: '\u{1F630}',
-  Joy: '\u{1F60A}',
-  Anger: '\u{1F621}',
-  Envy: '\u{1F7E2}',
-};
 const DUVIRI_MOOD_LENGTH = 7200;
 const DUVIRI_FULL_CYCLE = DUVIRI_MOOD_LENGTH * 5;
 
@@ -68,12 +62,13 @@ export function build(cycles) {
     return emptyEmbed('World Cycles', 'Cycle data unavailable.');
   }
 
-  const earth = cycles.earth.isDay ? '\u2600\uFE0F Day' : '\u{1F319} Night';
-  const cetus = cycles.cetus.isDay ? '\u2600\uFE0F Day' : '\u{1F319} Night';
-  const vallis = cycles.vallis.isWarm ? '\u{1F525} Warm' : '\u2744\uFE0F Cold';
-  const cambion = cycles.cambion.isFass ? '\u2600\uFE0F Fass' : '\u{1F319} Vome';
-  const zariman = cycles.zariman.isCorpus ? '\u{1F535} Corpus' : '\u{1F534} Grineer';
-  const duviri = `${DUVIRI_MOOD_EMOJI[cycles.duviri.mood] || ''} ${cycles.duviri.mood}`;
+  const earth = cycles.earth.isDay ? `${e('day')} Day` : `${e('night')} Night`;
+  const cetus = cycles.cetus.isDay ? `${e('day')} Day` : `${e('night')} Night`;
+  const vallis = cycles.vallis.isWarm ? `${e('warm')} Warm` : `${e('cold')} Cold`;
+  const cambion = cycles.cambion.isFass ? `${e('day')} Fass` : `${e('night')} Vome`;
+  const zariman = cycles.zariman.isCorpus ? `${e('corpus')} Corpus` : `${e('grineer')} Grineer`;
+  const mood = cycles.duviri.mood.toLowerCase();
+  const duviri = `${e(mood)} ${cycles.duviri.mood}`;
 
   return new EmbedBuilder()
     .setAuthor({ name: 'World Cycles' })

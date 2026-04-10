@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { parseDate } from '../services/warframe-api.js';
 import { getMissionType, getNodeName, getItemName } from '../utils/warframe-data.js';
 import { toUnix, emptyEmbed, COLORS } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 
 export const key = 'alerts';
 
@@ -32,7 +33,7 @@ export function build(alerts) {
     const reward = mission?.missionReward;
     let rewardText = '';
     if (reward?.items?.length) rewardText = reward.items.map(i => getItemName(i)).join(', ');
-    if (reward?.credits) rewardText += (rewardText ? ' + ' : '') + `${reward.credits}cr`;
+    if (reward?.credits) rewardText += (rewardText ? ' + ' : '') + `${reward.credits} ${e('credits')}cr`;
     return `**${type}** \u2022 ${node}\n\u2003${rewardText || 'No reward listed'} \u2022 ends <t:${toUnix(a.expiry)}:R>`;
   });
 

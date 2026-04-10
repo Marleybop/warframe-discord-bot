@@ -2,11 +2,12 @@ import { EmbedBuilder } from 'discord.js';
 import { searchItems } from '../services/warframestat.js';
 import { getItemImageUrl } from '../utils/warframe-data.js';
 import { COLORS } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 
 const RARITY_EMOJI = {
-  Common: '\u{1F7E4}',
-  Uncommon: '\u26AA',
-  Rare: '\u{1F7E1}',
+  Common: () => e('common'),
+  Uncommon: () => e('uncommon'),
+  Rare: () => e('rare'),
 };
 
 const TIER_COLORS = {
@@ -73,7 +74,8 @@ export async function relic(interaction) {
   const rare = rewards.filter(r => r.rarity === 'Rare');
 
   const formatReward = (r) => {
-    const emoji = RARITY_EMOJI[r.rarity] || '';
+    const emojiGetter = RARITY_EMOJI[r.rarity];
+    const emoji = emojiGetter ? emojiGetter() : '';
     const name = r.item?.name || r.itemName || 'Unknown';
     const chance = r.chance != null ? ` \u2022 ${Number(r.chance).toFixed(1)}%` : '';
     return `${emoji} ${name}${chance}`;

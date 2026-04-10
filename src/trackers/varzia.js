@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { parseDate } from '../services/warframe-api.js';
 import { getNodeName, getItemName, getItemImageUrl } from '../utils/warframe-data.js';
 import { toUnix, emptyEmbed, COLORS } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 
 export const key = 'varzia';
 
@@ -41,7 +42,7 @@ export function build(varzia) {
   if (varzia.manifest.length > 0) {
     const lines = varzia.manifest.map(i => {
       const name = getItemName(i.item);
-      const price = i.primePrice ? `${i.primePrice} Aya` : '';
+      const price = i.primePrice ? `${i.primePrice} ${e('aya')}Aya` : '';
       return `${name}${price ? ` \u2022 ${price}` : ''}`;
     });
 

@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { toUnix, emptyEmbed } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 import { cached } from '../services/cache.js';
 
 export const key = 'steelpath';
@@ -32,7 +33,7 @@ export async function build() {
 
   let desc = '';
   if (current) {
-    desc += `**This Week:** ${current.name} \u2022 ${current.cost} Steel Essence\n`;
+    desc += `**This Week:** ${current.name} \u2022 ${current.cost} ${e('steelessence')}SE\n`;
   }
   if (expiry) {
     desc += `Rotates <t:${toUnix(expiry)}:R>\n`;
@@ -43,7 +44,7 @@ export async function build() {
     desc += '\n__Rotation__\n';
     desc += data.rotation.map((r, i) => {
       const marker = r.name === current?.name ? '**\u25B6** ' : '\u2003';
-      return `${marker}${r.name} \u2022 ${r.cost} SE`;
+      return `${marker}${r.name} \u2022 ${r.cost} ${e('steelessence')}SE`;
     }).join('\n');
   }
 

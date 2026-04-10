@@ -4,6 +4,7 @@ import { fetchWorldState } from './services/warframe-api.js';
 import { trackers } from './trackers/index.js';
 import { handleInteraction, commandDefinitions } from './commands/index.js';
 import { buildGuideEmbeds } from './commands/guide.js';
+import { initEmojis } from './utils/emojis.js';
 
 if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
   console.error('Set DISCORD_TOKEN in .env');
@@ -11,7 +12,7 @@ if (!TOKEN || TOKEN === 'YOUR_TOKEN_HERE') {
 }
 
 const client = new Client({
-  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.GuildEmojisAndStickers],
 });
 
 // Track bot messages per tracker so we edit instead of repost
@@ -162,6 +163,9 @@ client.on('interactionCreate', handleInteraction);
 
 client.once('clientReady', async () => {
   console.log(`Logged in as ${client.user.tag}`);
+
+  // Init custom emojis (if enabled)
+  await initEmojis();
 
   // Register slash commands
   await registerCommands();

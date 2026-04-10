@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getItemList, assetUrl } from '../services/market.js';
+import { e } from '../utils/emojis.js';
 
 export async function ducats(interaction) {
   await interaction.deferReply({ ephemeral: true });
@@ -28,7 +29,7 @@ export async function ducats(interaction) {
       .sort((a, b) => b.ducats - a.ducats)
       .slice(0, 20);
 
-    const lines = sorted.map(i => `**${i.name}** \u2022 ${i.ducats} ducats`);
+    const lines = sorted.map(i => `**${i.name}** \u2022 ${i.ducats} ${e('ducats')}ducats`);
 
     return interaction.editReply({
       embeds: [new EmbedBuilder()
@@ -62,14 +63,14 @@ export async function ducats(interaction) {
     const total = parts.reduce((sum, p) => sum + p.ducats, 0);
     const lines = parts
       .sort((a, b) => b.ducats - a.ducats)
-      .map(p => `${p.i18n.en.name} \u2022 **${p.ducats}**`);
+      .map(p => `${p.i18n.en.name} \u2022 **${p.ducats} ${e('ducats')}**`);
 
     const embed = new EmbedBuilder()
       .setAuthor({ name: 'Ducat Value' })
       .setTitle(query)
       .setDescription(
         lines.join('\n') +
-        `\n\n**Total: ${total} ducats**`
+        `\n\n**Total: ${total} ${e('ducats')}ducats**`
       )
       .setColor(0xDAA520);
 
@@ -96,7 +97,7 @@ export async function ducats(interaction) {
   const embed = new EmbedBuilder()
     .setAuthor({ name: 'Ducat Value' })
     .setTitle(match.i18n.en.name)
-    .setDescription(`**${match.ducats}** ducats`)
+    .setDescription(`**${match.ducats} ${e('ducats')}** ducats`)
     .setColor(0xDAA520);
 
   const thumb = match.i18n?.en?.thumb;

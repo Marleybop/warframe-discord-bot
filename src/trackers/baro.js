@@ -2,6 +2,7 @@ import { EmbedBuilder } from 'discord.js';
 import { parseDate } from '../services/warframe-api.js';
 import { getNodeName, getItemName, getItemImageUrl } from '../utils/warframe-data.js';
 import { toUnix, emptyEmbed, COLORS } from '../utils/embed-helpers.js';
+import { e } from '../utils/emojis.js';
 
 // Relay node codes → planet thumbnail from the Warframe wiki
 const RELAY_IMAGES = {
@@ -58,7 +59,7 @@ export function build(trader) {
     if (trader.inventory?.length > 0) {
       const lines = trader.inventory.map(i => {
         const name = getItemName(i.ItemType);
-        return `${name} \u2022 ${i.PrimePrice || '?'}dc \u2022 ${i.RegularPrice || '?'}cr`;
+        return `${name} \u2022 ${i.PrimePrice || '?'} ${e('ducats')}dc \u2022 ${i.RegularPrice || '?'} ${e('credits')}cr`;
       });
       desc += '\n\n' + lines.join('\n');
     }

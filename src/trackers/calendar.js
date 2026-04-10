@@ -1,6 +1,7 @@
 import { EmbedBuilder } from 'discord.js';
 import { toUnix, emptyEmbed } from '../utils/embed-helpers.js';
 import { cached } from '../services/cache.js';
+import { e } from '../utils/emojis.js';
 
 export const key = 'calendar';
 
@@ -21,10 +22,10 @@ export function extract() {
 }
 
 const EVENT_EMOJI = {
-  'To Do': '\u{1F4CB}',
-  'Big Prize!': '\u{1F381}',
-  'Override': '\u2699\uFE0F',
-  'Operation': '\u2694\uFE0F',
+  'To Do': () => e('challenge'),
+  'Big Prize!': () => e('reward'),
+  'Override': () => e('override'),
+  'Operation': () => e('operation'),
 };
 
 export async function build() {
@@ -74,7 +75,8 @@ export async function build() {
     const label = isToday ? `__${dateStr} \u2500 Today__` : `__${dateStr}__`;
 
     const eventLines = day.events.map(event => {
-      const emoji = EVENT_EMOJI[event.type] || '\u2022';
+      const emojiGetter = EVENT_EMOJI[event.type];
+      const emoji = emojiGetter ? emojiGetter() : '\u2022';
 
       if (event.challenge) {
         return `${emoji} **${event.challenge.title}**\n\u2003${event.challenge.description}`;

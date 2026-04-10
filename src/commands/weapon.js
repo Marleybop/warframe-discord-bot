@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getWeapon } from '../services/warframestat.js';
+import { e } from '../utils/emojis.js';
 
 export async function weapon(interaction) {
   await interaction.deferReply({ ephemeral: true });
@@ -95,7 +96,7 @@ export async function weapon(interaction) {
   if (components.length > 0) {
     const compLines = components.map(c => {
       let line = `**${c.name}** x${c.itemCount}`;
-      if (c.ducats) line += ` (${c.ducats} ducats)`;
+      if (c.ducats) line += ` (${c.ducats} ${e('ducats')}ducats)`;
 
       // Drop sources for this component
       const drops = (c.drops || []).slice(0, 3);
@@ -115,7 +116,7 @@ export async function weapon(interaction) {
   // ── Crafting Cost ──
   if (wp.buildPrice) {
     const buildTime = wp.buildTime ? `${Math.round(wp.buildTime / 3600)}h` : '?';
-    desc += `\n\n__Crafting__\n${wp.buildPrice.toLocaleString()} Credits \u2022 ${buildTime} build time`;
+    desc += `\n\n__Crafting__\n${wp.buildPrice.toLocaleString()} ${e('credits')}Credits \u2022 ${buildTime} build time`;
   }
 
   const embed = new EmbedBuilder()

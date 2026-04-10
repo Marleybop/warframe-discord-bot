@@ -31,7 +31,7 @@ export function build(storms) {
     const details = getNodeDetails(s.node);
     const node = details.value || s.node;
     const missionType = details.type || '';
-    const tier = s.tier ? getTier(s.tier) : { emoji: '\u2B1C', name: '?' };
+    const tier = getTier(s.tier || '');
     return `${tier.emoji} **${tier.name}** \u2022 ${node} \u2022 ${missionType} \u2022 ends <t:${toUnix(s.expiry)}:R>`;
   });
 

@@ -21,21 +21,23 @@ for (const [key, val] of Object.entries(languages)) {
   itemLookup.set(key.toLowerCase(), val.value || val);
 }
 
+import { e, tierEmoji, factionEmoji } from './emojis.js';
+
 export const VOID_TIERS = {
-  VoidT1: { name: 'Lith', emoji: '\u{1F7E4}' },
-  VoidT2: { name: 'Meso', emoji: '\u{1F535}' },
-  VoidT3: { name: 'Neo', emoji: '\u{1F534}' },
-  VoidT4: { name: 'Axi', emoji: '\u{1F7E1}' },
-  VoidT5: { name: 'Requiem', emoji: '\u{1F7E3}' },
-  VoidT6: { name: 'Omnia', emoji: '\u26AA' },
+  VoidT1: { name: 'Lith', get emoji() { return tierEmoji('VoidT1'); } },
+  VoidT2: { name: 'Meso', get emoji() { return tierEmoji('VoidT2'); } },
+  VoidT3: { name: 'Neo', get emoji() { return tierEmoji('VoidT3'); } },
+  VoidT4: { name: 'Axi', get emoji() { return tierEmoji('VoidT4'); } },
+  VoidT5: { name: 'Requiem', get emoji() { return tierEmoji('VoidT5'); } },
+  VoidT6: { name: 'Omnia', get emoji() { return tierEmoji('VoidT6'); } },
 };
 
 export const FACTIONS = {
-  FC_GRINEER: { name: 'Grineer', emoji: '\u{1F534}' },
-  FC_CORPUS: { name: 'Corpus', emoji: '\u{1F535}' },
-  FC_INFESTATION: { name: 'Infested', emoji: '\u{1F7E2}' },
-  FC_OROKIN: { name: 'Corrupted', emoji: '\u{1F7E1}' },
-  FC_SENTIENT: { name: 'Sentient', emoji: '\u{1F7E3}' },
+  FC_GRINEER: { name: 'Grineer', get emoji() { return factionEmoji('FC_GRINEER'); } },
+  FC_CORPUS: { name: 'Corpus', get emoji() { return factionEmoji('FC_CORPUS'); } },
+  FC_INFESTATION: { name: 'Infested', get emoji() { return factionEmoji('FC_INFESTATION'); } },
+  FC_OROKIN: { name: 'Corrupted', get emoji() { return factionEmoji('FC_OROKIN'); } },
+  FC_SENTIENT: { name: 'Sentient', get emoji() { return factionEmoji('FC_SENTIENT'); } },
 };
 
 export function getNodeName(code) {
@@ -78,7 +80,7 @@ export function getMissionType(code) {
 }
 
 export function getTier(modifier) {
-  return VOID_TIERS[modifier] || { name: modifier, emoji: '\u2B1C' };
+  return VOID_TIERS[modifier] || { name: modifier, get emoji() { return e('unknown'); } };
 }
 
 export function getRegion(id) {
@@ -105,7 +107,7 @@ export function getModifier(code) {
 }
 
 export function getFaction(code) {
-  return FACTIONS[code] || { name: code.replace('FC_', ''), emoji: '\u2B1C' };
+  return FACTIONS[code] || { name: code.replace('FC_', ''), get emoji() { return e('unknown'); } };
 }
 
 export function getChallengeName(path) {

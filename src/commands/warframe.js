@@ -1,5 +1,6 @@
 import { EmbedBuilder } from 'discord.js';
 import { getWarframe, searchItems } from '../services/warframestat.js';
+import { e } from '../utils/emojis.js';
 
 export async function warframe(interaction) {
   await interaction.deferReply({ ephemeral: true });
@@ -69,7 +70,7 @@ export async function warframe(interaction) {
   if (components.length > 0) {
     const compLines = components.map(c => {
       let line = `**${c.name}** x${c.itemCount}`;
-      if (c.ducats) line += ` (${c.ducats} ducats)`;
+      if (c.ducats) line += ` (${c.ducats} ${e('ducats')}ducats)`;
 
       const drops = (c.drops || []).slice(0, 3);
       if (drops.length > 0) {
@@ -87,7 +88,7 @@ export async function warframe(interaction) {
   // ── Crafting Cost ──
   if (wf.buildPrice) {
     const buildTime = wf.buildTime ? `${Math.round(wf.buildTime / 3600)}h` : '?';
-    desc += `\n\n__Crafting__\n${wf.buildPrice.toLocaleString()} Credits \u2022 ${buildTime} build time`;
+    desc += `\n\n__Crafting__\n${wf.buildPrice.toLocaleString()} ${e('credits')}Credits \u2022 ${buildTime} build time`;
   }
 
   const embed = new EmbedBuilder()
