@@ -57,8 +57,8 @@ export function build(fissures) {
     });
 
     const embed = new EmbedBuilder()
-      .setAuthor({ name: `${group.tier.emoji} ${group.tier.name}` })
-      .setDescription(lines.join('\n'))
+      .setAuthor({ name: group.tier.name })
+      .setDescription(`${group.tier.emoji} **${group.tier.name}**\n` + lines.join('\n'))
       .setColor(TIER_COLORS[k] || 0x4A90D9);
 
     const relicImg = RELIC_IMAGES[k];
