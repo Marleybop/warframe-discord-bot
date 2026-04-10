@@ -6,13 +6,13 @@ Discord bot that tracks Warframe world state with live-updating embeds and inter
 
 ### Live Trackers (19 channels)
 
-Each tracker owns a single message and edits it every 60 seconds — no spam, just a constantly-refreshing dashboard.
+Each tracker owns a single message and edits it every 60 seconds — no spam, just a constantly-refreshing dashboard. News posts new articles as they appear.
 
 | Category | Trackers |
 |---|---|
 | **Missions** | Void Fissures, Void Storms, Sortie, Archon Hunt |
 | **Traders** | Baro Ki'Teer, Varzia (Prime Resurgence), Darvo's Deal |
-| **World** | World Cycles, Invasions, Alerts, Events, News |
+| **World** | World Cycles (Earth, Cetus, Vallis, Cambion, Zariman, Duviri), Invasions, Alerts, Events, News |
 | **Endgame** | Nightwave, Steel Path, Deep Archimedea, The Circuit |
 | **Other** | Global Boosters, Fomorian/Razorback, 1999 Calendar |
 
@@ -23,23 +23,24 @@ All responses are **ephemeral** — only the user who typed the command sees the
 | Command | Description |
 |---|---|
 | `/price <item>` | Market prices (48h + 90d stats, set breakdowns) |
-| `/where <item>` | Drop locations and sources |
+| `/where <item>` | Drop locations and sources (wiki fallback) |
 | `/relic <name>` | Relic contents grouped by rarity |
 | `/warframe <name>` | Stats, abilities, augments, components, farm locations |
 | `/weapon <name>` | Stats, damage, incarnon, riven dispo, components |
 | `/mod <name>` | Stats per rank, drop sources, mod card image |
 | `/riven <weapon>` | Live riven auctions with stat/price/roll filters |
-| `/ducats [item]` | Ducat value of a Prime part (or top 20) |
+| `/ducats [item]` | Ducat value of a Prime part or set (or top 20) |
 | `/vaulted [category]` | Browse all vaulted Prime items |
 | `/help` | Command reference and bot info |
 
-### Images
+### Visual Features
 
 - Merged reward images on invasions (both attacker + defender)
 - Relic tier thumbnails on fissures
-- Planet images on Baro's relay
+- Planet images on Baro's relay location
 - Item thumbnails on Darvo's deal and events
 - Mod card images from the wiki
+- Optional custom Warframe-themed emojis for currencies and resources
 
 ### Infrastructure
 
@@ -47,6 +48,7 @@ All responses are **ephemeral** — only the user who typed the command sees the
 - **Autocomplete** — all slash commands have type-filtered autocomplete
 - **Auto-registration** — slash commands register on startup
 - **Daily data updates** — WFCD game data refreshes every 24h
+- **Custom emojis** — optional Warframe icons for currencies/factions/resources
 
 ## Prerequisites
 
@@ -70,7 +72,7 @@ npm run update-data
 2. Click **New Application**, name it
 3. **Bot** tab > Reset Token > copy the token
 4. **OAuth2 > URL Generator** > tick `bot` and `applications.commands`
-5. Under **Bot Permissions**, tick: Send Messages, Embed Links, Read Message History, View Channels, Attach Files
+5. Under **Bot Permissions**, tick: Send Messages, Embed Links, Read Message History, View Channels, Attach Files, Use External Emojis
 6. Open the generated URL to invite the bot to your server
 
 ### 3. Configure
@@ -82,6 +84,9 @@ DISCORD_TOKEN=your_bot_token
 CLIENT_ID=your_application_id
 GUILD_ID=your_server_id
 
+# Optional: custom Warframe emojis (uses 34 server emoji slots)
+USE_CUSTOM_EMOJIS=false
+
 # Add channel IDs for trackers you want (leave blank to disable)
 FISSURE_CHANNEL_ID=123456789
 BARO_CHANNEL_ID=123456789
@@ -90,7 +95,17 @@ BARO_CHANNEL_ID=123456789
 
 Get channel IDs: Discord Settings > Advanced > Developer Mode > right-click channel > Copy Channel ID.
 
-### 4. Start
+### 4. Custom emojis (optional)
+
+To use Warframe-themed icons for currencies, factions, and resources:
+
+1. Set `USE_CUSTOM_EMOJIS=true` in `.env`
+2. Run `npm run setup-emojis` to upload icons to your server
+3. Restart the bot
+
+This uses 34 of your server's emoji slots. Without this, the bot uses Unicode emoji fallbacks where they existed originally, and no emoji for currencies/resources.
+
+### 5. Start
 
 ```bash
 npm start
@@ -154,10 +169,12 @@ src/
     cache.js          # SQLite caching layer
   utils/
     warframe-data.js  # Name lookups (items, nodes, factions)
+    emojis.js         # Centralized emoji system (custom + Unicode)
     embed-helpers.js  # Shared colors, formatting, progress bars
     image-merge.js    # Sharp-based image compositing
 scripts/
   setup.js            # One-command setup
+  setup-emojis.js     # Upload custom emojis to Discord server
   update-data.js      # Download WFCD game data
 data/                 # Game data files (auto-updated)
 ```
@@ -167,18 +184,21 @@ data/                 # Game data files (auto-updated)
 | Problem | Fix |
 |---|---|
 | `Set DISCORD_TOKEN in .env` | Paste your bot token in `.env` |
-| `Missing Access` | Bot needs View Channels, Send Messages, Embed Links, Read Message History, Attach Files |
+| `Missing Access` | Bot needs View Channels, Send Messages, Embed Links, Read Message History, Attach Files, Use External Emojis |
 | Codes like `SolNode51` | Run `npm run update-data` |
 | Slash commands not appearing | Ensure `CLIENT_ID` and `GUILD_ID` are set, restart the bot |
 | No autocomplete suggestions | Wait for `[autocomplete] Ready` in console on startup |
+| Custom emojis not showing | Run `npm run setup-emojis`, set `USE_CUSTOM_EMOJIS=true`, restart |
+| Emoji upload rate limited | Wait a few minutes and run `npm run setup-emojis` again |
 
 ## Scripts
 
 ```bash
-npm start              # Start the bot
-npm run dev            # Start with auto-reload on file changes
-npm run update-data    # Refresh game data from WFCD
+npm start                # Start the bot
+npm run dev              # Start with auto-reload on file changes
+npm run update-data      # Refresh game data from WFCD
 npm run register-commands  # Manually register slash commands
+npm run setup-emojis     # Upload custom emojis to your server
 ```
 
 ## Requirements
